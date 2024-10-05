@@ -1,3 +1,5 @@
+import Navbar from "@/components/custom/shared/navbar";
+import Sidebar from "@/components/custom/shared/sidebar";
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 
@@ -7,7 +9,15 @@ const Dashboard = async () => {
   if (!user?.id) return redirect("/sign-in");
 
   return (
-    <main className="container mx-auto max-h-[100%] min-h-[100vh] w-full space-y-20 px-4"></main>
+    <main className="flex">
+      <Sidebar />
+      <section className="w-full">
+        <Navbar />
+        <div className="container mx-auto space-y-6 overflow-x-hidden p-2 sm:p-6">
+          <h1>Dashboard</h1>
+        </div>
+      </section>
+    </main>
   );
 };
 

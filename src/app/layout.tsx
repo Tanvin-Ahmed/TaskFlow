@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/custom/providers/theme-provider";
 import { ClerkProvider } from "@clerk/nextjs";
 import { shadesOfPurple } from "@clerk/themes";
 import { cn } from "@/lib/utils";
+import AppContextProvider from "@/context/app-context";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -46,7 +47,7 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            {children}
+            <AppContextProvider>{children}</AppContextProvider>
           </ThemeProvider>
         </body>
       </html>

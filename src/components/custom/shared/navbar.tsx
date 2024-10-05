@@ -15,25 +15,38 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
 
 const Navbar = () => {
   const { userId } = useAuth();
+  const path = usePathname();
   return (
     <header className="sticky top-0 z-50 w-full bg-[#f1ecff] dark:bg-indigo-900/20 dark:backdrop-blur-sm">
-      <nav className="container mx-auto flex items-center justify-between p-2">
-        <Link href={"/"} className="flex items-center gap-2">
-          <CustomAvatar src="./assets/icons/logo.png" alt="TF" />
-          <h1 className="text-xl font-bold sm:text-2xl">
-            <span className="text-primary">Task</span> Flow
-          </h1>
-        </Link>
+      <nav
+        className={cn(
+          "container mx-auto flex items-center justify-between p-2",
+          {
+            "justify-end": path !== "/",
+          },
+        )}
+      >
+        {path === "/" ? (
+          <Link href={"/"} className="flex items-center gap-2">
+            <CustomAvatar src="./assets/icons/logo.png" alt="TF" />
+            <h1 className="text-xl font-bold sm:text-2xl">
+              <span className="text-primary">Task</span> Flow
+            </h1>
+          </Link>
+        ) : null}
         <div className="flex items-center justify-center gap-3">
           {userId ? <UserButton /> : null}
           {/* for large screen */}
           <div className="hidden items-center justify-center gap-2 sm:flex">
             {userId ? (
-              <Link href={"/snippets"}>
-                <Button>My Snippets</Button>
+              // ! need to update options
+              <Link href={"/dashboard"}>
+                <Button>Dashboard</Button>
               </Link>
             ) : (
               <>
