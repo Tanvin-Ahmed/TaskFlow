@@ -1,16 +1,18 @@
 "use client";
-import { AppContext } from "@/context/app-context";
-import { useContext } from "react";
+import { setOpenFullSidebar, setOpenSidebar } from "@/redux";
+import { useAppDispatch, useAppSelector } from "@/redux/store";
 
 const useSidebar = () => {
-  const { openSidebar, setOpenSidebar, openFullSidebar, setOpenFullSidebar } =
-    useContext(AppContext);
+  const dispatch = useAppDispatch();
+  const { openFullSidebar, openSidebar } = useAppSelector(
+    (state) => state.global,
+  );
 
-  const handleOpenSidebar = () => setOpenSidebar(true);
-  const handleCloseSidebar = () => setOpenSidebar(false);
+  const handleOpenSidebar = () => dispatch(setOpenSidebar(true));
+  const handleCloseSidebar = () => dispatch(setOpenSidebar(false));
 
   const toggleOpenFullSidebar = () => {
-    setOpenFullSidebar((state) => !state);
+    dispatch(setOpenFullSidebar(!openFullSidebar));
   };
 
   return {

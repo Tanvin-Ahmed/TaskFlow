@@ -1,4 +1,4 @@
-import Navbar from "@/components/custom/shared/navbar";
+import DashboardNavbar from "@/components/custom/dashboard/shared/navbar";
 import Sidebar from "@/components/custom/shared/sidebar";
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
@@ -12,7 +12,7 @@ const Dashboard = async () => {
     <main className="flex">
       <Sidebar />
       <section className="w-full">
-        <Navbar />
+        <DashboardNavbar />
         <div className="container mx-auto space-y-6 overflow-x-hidden p-2 sm:p-6">
           <h1>Dashboard</h1>
         </div>

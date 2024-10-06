@@ -22,7 +22,7 @@ const Sidebar = () => {
       <div
         onClick={handleCloseSidebar}
         className={cn("duration-300 sm:hidden", {
-          "fixed inset-0 z-40 bg-indigo-900 bg-opacity-30": openSidebar,
+          "fixed inset-0 z-50 bg-indigo-900 bg-opacity-30": openSidebar,
           hidden: !openSidebar,
         })}
       />
