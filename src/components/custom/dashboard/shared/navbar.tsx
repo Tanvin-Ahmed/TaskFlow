@@ -2,19 +2,37 @@
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "../../shared/theme-button";
 import UserButton from "@/features/auth/components/user-button";
+import { usePathname } from "next/navigation";
+import MobileSidebar from "../../shared/sidebar/mobile-sidebar";
+
+const pageDetails = [
+  {
+    title: "Dashboard",
+    description: "Monitor all of your projects and tasks here.",
+    href: "/dashboard",
+  },
+];
 
 const DashboardNavbar = () => {
+  const pathname = usePathname();
+
+  const details = pageDetails.find((p) => p.href === pathname);
+
   return (
-    <header className="sticky top-0 z-40 w-full bg-[#f1ecff] dark:bg-indigo-900/20 dark:backdrop-blur-sm">
+    <header className="sticky top-0 z-40 w-full backdrop-blur-sm dark:bg-indigo-900/20">
       <nav
-        className={cn("container mx-auto flex items-center justify-end p-2")}
+        className={cn(
+          "container mx-auto flex items-center justify-between p-2",
+        )}
       >
-        <div className="flex items-center justify-center gap-3">
-          {/* for large screen */}
-          <div className="flex items-center justify-center gap-2">
-            <UserButton />
-            <ThemeToggle />
-          </div>
+        <div className="hidden flex-col lg:flex">
+          <h1 className="text-2xl font-bold">{details?.title}</h1>
+          <p className="text-muted-foreground">{details?.description}</p>
+        </div>
+        <MobileSidebar />
+        <div className="flex items-center justify-center gap-2">
+          <UserButton />
+          <ThemeToggle />
         </div>
       </nav>
     </header>
