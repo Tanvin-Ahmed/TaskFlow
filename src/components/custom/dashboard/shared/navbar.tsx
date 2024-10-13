@@ -1,7 +1,7 @@
 "use client";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "../../shared/theme-button";
-import MenuButton from "./menu-button";
+import UserButton from "@/features/auth/components/user-button";
 
 const DashboardNavbar = () => {
   return (
@@ -12,8 +12,8 @@ const DashboardNavbar = () => {
         <div className="flex items-center justify-center gap-3">
           {/* for large screen */}
           <div className="flex items-center justify-center gap-2">
+            <UserButton />
             <ThemeToggle />
-            <MenuButton />
           </div>
         </div>
       </nav>

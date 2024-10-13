@@ -1,6 +1,12 @@
 import DashboardNavbar from "@/components/custom/dashboard/shared/navbar";
+import { getCurrent } from "@/features/auth/server/action";
+import { redirect } from "next/navigation";
 
 const Dashboard = async () => {
+  const user = await getCurrent();
+
+  if (!user) redirect("/sign-in");
+
   return (
     <main className="flex">
       <section className="w-full">

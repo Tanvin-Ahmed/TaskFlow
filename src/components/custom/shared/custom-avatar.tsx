@@ -4,13 +4,14 @@ type Props = {
   src: string;
   alt: string;
   className?: string;
+  fallbackClassName?: string;
 };
 
-const CustomAvatar = ({ src, alt, className }: Props) => {
+const CustomAvatar = ({ src, alt, className, fallbackClassName }: Props) => {
   return (
     <Avatar className={className ?? ""}>
       <AvatarImage src={src} />
-      <AvatarFallback>{alt}</AvatarFallback>
+      <AvatarFallback className={fallbackClassName}>{alt}</AvatarFallback>
     </Avatar>
   );
 };

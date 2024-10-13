@@ -42,6 +42,7 @@ const app = new Hono()
       sameSite: "strict",
       maxAge: 60 * 60 * 24 * 30,
     });
+
     return c.json({ success: true });
   })
   .delete("/logout", sessionMiddleware, async (c) => {
@@ -49,7 +50,6 @@ const app = new Hono()
 
     deleteCookie(c, AUTH_COOKIE);
     await account.deleteSession("current");
-
     return c.json({ success: true });
   });
 

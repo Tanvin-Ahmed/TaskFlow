@@ -20,9 +20,10 @@ import DottedSeparator from "../../../components/custom/shared/dotted-separator"
 import Link from "next/link";
 import { signInSchema } from "@/features/auth/schema";
 import { useSignIn } from "../api/use-signin";
+import { Loader } from "lucide-react";
 
 const SignInCard = () => {
-  const { mutate } = useSignIn();
+  const { mutate, isPending } = useSignIn();
   const form = useForm<z.infer<typeof signInSchema>>({
     resolver: zodResolver(signInSchema),
     defaultValues: {
@@ -71,8 +72,12 @@ const SignInCard = () => {
                   </FormItem>
                 )}
               />
-              <Button disabled={false} type="submit" className="w-full">
-                Sign In
+              <Button disabled={isPending} type="submit" className="w-full">
+                {isPending ? (
+                  <Loader className="size-7 animate-spin" />
+                ) : (
+                  "Sign In"
+                )}
               </Button>
             </form>
           </Form>
