@@ -36,8 +36,8 @@ const UserButton = () => {
         <CustomAvatar
           src=""
           alt={avatarFallback}
-          className="size-10 border border-neutral-300 transition hover:opacity-75"
-          fallbackClassName="bg-neutral-200 font-medium text-neutral-500"
+          className="size-10 border border-neutral-300 transition hover:opacity-75 dark:border-purple-300"
+          fallbackClassName="bg-neutral-200 dark:bg-purple-900/40 font-medium text-neutral-500"
         />
       </DropdownMenuTrigger>
       <DropdownMenuContent
