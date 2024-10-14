@@ -1,5 +1,6 @@
 import DashboardNavbar from "@/components/custom/dashboard/shared/navbar";
 import Sidebar from "@/components/custom/shared/sidebar/sidebar";
+import CreateWorkspaceModal from "@/features/workspaces/components/create-workspace-modal";
 import { ReactNode } from "react";
 
 type Props = {
@@ -9,6 +10,7 @@ type Props = {
 const DashboardLayout = ({ children }: Props) => {
   return (
     <div className="min-h-screen">
+      <CreateWorkspaceModal />
       <div className="flex h-full w-full">
         <div className="fixed left-0 top-0 hidden h-full overflow-y-auto lg:block lg:w-[264px]">
           <Sidebar />

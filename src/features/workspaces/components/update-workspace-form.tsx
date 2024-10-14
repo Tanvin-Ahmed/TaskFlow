@@ -1,9 +1,8 @@
 "use client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { workspaceSchema } from "../schema";
+import { updateWorkspaceSchema } from "../schema";
 import { z } from "zod";
-import { useCreateWorkspace } from "../api/use-create-workspace";
 import {
   Form,
   FormControl,
@@ -16,27 +15,30 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import DottedSeparator from "@/components/custom/shared/dotted-separator";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { ImageIcon, Loader } from "lucide-react";
+import { ArrowLeftIcon, ImageIcon, Loader } from "lucide-react";
 import { ChangeEvent, useRef } from "react";
 import Image from "next/image";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useRouter } from "next/navigation";
-import { cn } from "@/lib/utils";
+import { Workspace } from "../types";
+import { useUpdateWorkspace } from "../api/use-update-workspace";
 
 interface Props {
   onCancel?: () => void;
+  initialValue: Workspace;
 }
 
-const CreateWorkspaceForm = ({ onCancel }: Props) => {
+const UpdateWorkspaceForm = ({ onCancel, initialValue }: Props) => {
   const router = useRouter();
-  const { mutate, isPending } = useCreateWorkspace();
+  const { mutate, isPending } = useUpdateWorkspace();
 
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const form = useForm<z.infer<typeof workspaceSchema>>({
-    resolver: zodResolver(workspaceSchema),
+  const form = useForm<z.infer<typeof updateWorkspaceSchema>>({
+    resolver: zodResolver(updateWorkspaceSchema),
     defaultValues: {
-      name: "",
+      ...initialValue,
+      image: initialValue.imageUrl ?? "",
     },
   });
 
@@ -48,14 +50,14 @@ const CreateWorkspaceForm = ({ onCancel }: Props) => {
     }
   };
 
-  const onSubmit = (values: z.infer<typeof workspaceSchema>) => {
+  const onSubmit = (values: z.infer<typeof updateWorkspaceSchema>) => {
     const finalValues = {
       ...values,
       image: values.image instanceof File ? values.image : "",
     };
 
     mutate(
-      { form: finalValues },
+      { form: finalValues, param: { workspaceId: initialValue.$id } },
       {
         onSuccess: ({ data }) => {
           form.reset();
@@ -67,10 +69,20 @@ const CreateWorkspaceForm = ({ onCancel }: Props) => {
 
   return (
     <Card className="h-full w-full border-none shadow-none">
-      <CardHeader className="flex p-7">
-        <CardTitle className="text-xl font-bold">
-          Create a new workspace
-        </CardTitle>
+      <CardHeader className="flex flex-row items-center gap-x-4 space-y-0 p-7">
+        <Button
+          size={"icon"}
+          variant={"secondary"}
+          onClick={
+            onCancel
+              ? onCancel
+              : () => router.push(`/dashboard/workspaces/${initialValue.$id}`)
+          }
+          className="flex items-center justify-center rounded-full"
+        >
+          <ArrowLeftIcon className={"size-4"} />
+        </Button>
+        <CardTitle className="text-xl font-bold">{initialValue.name}</CardTitle>
       </CardHeader>
       <div className="px-7">
         <DottedSeparator />
@@ -131,32 +143,16 @@ const CreateWorkspaceForm = ({ onCancel }: Props) => {
                           disabled={isPending}
                           onChange={handleImageChange}
                         />
-                        {field.value ? (
-                          <Button
-                            type="button"
-                            disabled={isPending}
-                            variant={"destructive"}
-                            size={"xs"}
-                            className="mt-2 w-fit"
-                            onClick={() => {
-                              field.onChange(null);
-                              // inputRef.current?.value = "";
-                            }}
-                          >
-                            Remove Image
-                          </Button>
-                        ) : (
-                          <Button
-                            type="button"
-                            disabled={isPending}
-                            variant={"teritary"}
-                            size={"xs"}
-                            className="mt-2 w-fit"
-                            onClick={() => inputRef.current?.click()}
-                          >
-                            Upload Image
-                          </Button>
-                        )}
+                        <Button
+                          type="button"
+                          disabled={isPending}
+                          variant={"teritary"}
+                          size={"xs"}
+                          className="mt-2 w-fit"
+                          onClick={() => inputRef.current?.click()}
+                        >
+                          Upload Image
+                        </Button>
                       </div>
                     </div>
                   </div>
@@ -167,18 +163,6 @@ const CreateWorkspaceForm = ({ onCancel }: Props) => {
             <div className="flex flex-wrap items-center justify-between gap-4">
               <Button
                 disabled={isPending}
-                type="button"
-                size={"lg"}
-                variant={"secondary"}
-                onClick={onCancel}
-                className={cn("invisible w-full sm:w-fit", {
-                  visible: onCancel,
-                })}
-              >
-                Cancel
-              </Button>
-              <Button
-                disabled={isPending}
                 type="submit"
                 size={"lg"}
                 className="w-full sm:w-fit"
@@ -186,7 +170,7 @@ const CreateWorkspaceForm = ({ onCancel }: Props) => {
                 {isPending ? (
                   <Loader className="size-7 animate-spin" />
                 ) : (
-                  "Create workspace"
+                  "Save changes"
                 )}
               </Button>
             </div>
@@ -197,4 +181,4 @@ const CreateWorkspaceForm = ({ onCancel }: Props) => {
   );
 };
 
-export default CreateWorkspaceForm;
+export default UpdateWorkspaceForm;
