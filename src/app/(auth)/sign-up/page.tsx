@@ -1,5 +1,5 @@
 import SignUpCard from "@/features/auth/components/sign-up-card";
-import { getCurrent } from "@/features/auth/server/action";
+import { getCurrent } from "@/features/auth/server/queries";
 import { redirect } from "next/navigation";
 
 const page = async () => {

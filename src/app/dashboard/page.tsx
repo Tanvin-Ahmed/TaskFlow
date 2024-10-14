@@ -1,5 +1,5 @@
-import { getCurrent } from "@/features/auth/server/action";
-import { getWorkspaces } from "@/features/workspaces/action";
+import { getCurrent } from "@/features/auth/server/queries";
+import { getWorkspaces } from "@/features/workspaces/queries";
 import { redirect } from "next/navigation";
 
 const Dashboard = async () => {

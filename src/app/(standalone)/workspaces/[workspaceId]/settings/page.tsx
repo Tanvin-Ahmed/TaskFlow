@@ -1,5 +1,5 @@
-import { getCurrent } from "@/features/auth/server/action";
-import { getWorkspace } from "@/features/workspaces/action";
+import { getCurrent } from "@/features/auth/server/queries";
+import { getWorkspace } from "@/features/workspaces/queries";
 import UpdateWorkspaceForm from "@/features/workspaces/components/update-workspace-form";
 import { redirect } from "next/navigation";
 

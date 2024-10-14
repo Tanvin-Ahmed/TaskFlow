@@ -1,5 +1,5 @@
 import SignInCard from "@/features/auth/components/sign-in-card";
-import { getCurrent } from "@/features/auth/server/action";
+import { getCurrent } from "@/features/auth/server/queries";
 import { redirect } from "next/navigation";
 
 const SignInPage = async () => {
