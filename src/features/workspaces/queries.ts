@@ -57,3 +57,19 @@ export const getWorkspace = async (workspaceId: string) => {
     return null;
   }
 };
+
+export const getWorkspaceName = async (workspaceId: string) => {
+  try {
+    const { databases } = await createSessionClient();
+
+    const workspace = await databases.getDocument<Workspace>(
+      DATABASE_ID,
+      WORKSPACES_ID,
+      workspaceId,
+    );
+
+    return { name: workspace.name };
+  } catch {
+    return null;
+  }
+};
