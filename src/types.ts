@@ -92,12 +92,11 @@ export type Comment = {
   user?: User;
 };
 
-
 export type loginRequest = {
   email: string;
   password: string;
-}
+};
 
 export type passwordRequest = {
   token: string;
-}
+};
