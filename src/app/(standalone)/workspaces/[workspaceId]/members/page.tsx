@@ -14,7 +14,7 @@ const WorkspaceIdMembersPage = async ({ params }: Props) => {
   if (!user) redirect("/sign-in");
 
   return (
-    <section className="w-full lg:max-w-xl">
+    <section className="w-full">
       <MembersList workspaceId={workspaceId} />
     </section>
   );

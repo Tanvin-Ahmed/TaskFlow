@@ -15,7 +15,7 @@ const MembersList = ({ workspaceId }: Props) => {
   const { data, isLoading } = useGetMembers({ workspaceId });
 
   return (
-    <Card className="-full w-full border-none bg-neutral-50 shadow-none dark:bg-purple-900/5">
+    <Card className="h-full w-full border-none shadow-none">
       <CardHeader className="flex flex-row items-center gap-x-4 space-y-0 p-7">
         <Button
           size={"icon"}
