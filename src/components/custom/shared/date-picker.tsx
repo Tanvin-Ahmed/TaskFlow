@@ -42,9 +42,9 @@ const DatePicker = ({ value, onChange, className, placeholder }: Props) => {
           mode="single"
           selected={value}
           onSelect={(date) => onChange(date as Date)}
-          disabled={(date) =>
-            date > new Date() || date < new Date("1900-01-01")
-          }
+          // disabled={(date) =>
+          //   date > new Date() || date < new Date("1900-01-01")
+          // }
           initialFocus
         />
       </PopoverContent>
