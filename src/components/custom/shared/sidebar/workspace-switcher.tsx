@@ -38,13 +38,13 @@ const WorkspaceSwitcher = () => {
         />
       </div>
       <Select onValueChange={onSelect} value={workspaceId}>
-        <SelectTrigger className="w-full bg-neutral-200 p-1 font-medium">
+        <SelectTrigger className="w-full bg-neutral-200 p-1 font-medium dark:bg-transparent">
           <SelectValue placeholder="No workspace selected" />
         </SelectTrigger>
         <SelectContent>
           {isLoading ? (
             <div className="flex w-full items-center justify-center p-3">
-              <Loader className="size-9 animate-spin" />
+              <Loader className="size-5 animate-spin" />
             </div>
           ) : workspaces && !!workspaces?.total ? (
             workspaces.documents.map((ws) => (

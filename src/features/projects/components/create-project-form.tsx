@@ -22,13 +22,14 @@ import Image from "next/image";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import useWorkspaceId from "@/features/workspaces/hooks/use-workspace-id";
+import { useRouter } from "next/navigation";
 
 interface Props {
   onCancel?: () => void;
 }
 
 const CreateProjectForm = ({ onCancel }: Props) => {
-  // const router = useRouter();
+  const router = useRouter();
   const workspaceId = useWorkspaceId();
   const { mutate, isPending } = useCreateProject();
 
@@ -60,11 +61,12 @@ const CreateProjectForm = ({ onCancel }: Props) => {
     mutate(
       { form: finalValues },
       {
-        onSuccess: () => {
+        onSuccess: ({ data }) => {
           form.reset();
 
-          // TODO: redirect to project screen
-          // router.push(``);
+          router.push(
+            `/dashboard/workspaces/${workspaceId}/projects/${data.$id}`,
+          );
         },
       },
     );

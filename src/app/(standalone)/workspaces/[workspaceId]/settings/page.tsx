@@ -15,7 +15,6 @@ const WorkspaceIdSettingsPage = async ({ params }: Props) => {
   if (!user) redirect("/sign-in");
 
   const initialValues = await getWorkspace(workspaceId);
-  if (!initialValues) redirect(`/workspaces/${workspaceId}`);
 
   return (
     <section className="w-full lg:max-w-xl">

@@ -11,8 +11,6 @@ import { usePathname } from "next/navigation";
 import { RiAddCircleFill } from "react-icons/ri";
 
 const Projects = () => {
-  const projectId = null; // TODO: use useProjectId hook later
-
   const pathname = usePathname();
   const workspaceId = useWorkspaceId();
   const { open } = useCreateProjectModal();
@@ -35,7 +33,7 @@ const Projects = () => {
         </div>
       ) : data && !!data.total ? (
         data.documents.map((project) => {
-          const href = `/workspaces/${workspaceId}/projects/${projectId}`;
+          const href = `/dashboard/workspaces/${workspaceId}/projects/${project.$id}`;
           const isActive = pathname === href;
 
           return (
