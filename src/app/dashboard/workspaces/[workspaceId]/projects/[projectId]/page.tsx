@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { getCurrent } from "@/features/auth/server/queries";
 import ProjectAvatar from "@/features/projects/components/project-avatar";
 import { getProject } from "@/features/projects/queries";
+import TaskViewSwitcher from "@/features/tasks/components/task-view-switcher";
 import { PencilIcon } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -40,6 +41,7 @@ const ProjectPage = async ({ params }: Props) => {
           </Button>
         </div>
       </div>
+      <TaskViewSwitcher />
     </section>
   ) : (
     <section className="flex h-[75vh] w-full items-center justify-center">
