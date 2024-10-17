@@ -7,6 +7,7 @@ import { DATABASE_ID, MEMBERS_ID, PROJECTS_ID, TASKS_ID } from "@/config";
 import { ID, Query } from "node-appwrite";
 import { createAdminClient } from "@/lib/appwrite";
 import { PopulatedTask, Task } from "../types";
+import { Project } from "@/features/projects/types";
 
 const app = new Hono()
   .get(
@@ -105,6 +106,49 @@ const app = new Hono()
       return c.json({ data: { ...tasks, documents: populatedTasks } });
     },
   )
+  .get("/:taskId", sessionMiddleware, async (c) => {
+    const { users } = await createAdminClient();
+    const databases = c.get("databases");
+    const user = c.get("user");
+    const { taskId } = c.req.param();
+
+    const task = await databases.getDocument<Task>(
+      DATABASE_ID,
+      TASKS_ID,
+      taskId,
+    );
+
+    const currentUser = await getMember({
+      databases,
+      workspaceId: task.workspaceId,
+      userId: user.$id,
+    });
+    if (!currentUser) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
+
+    const project = await databases.getDocument<Project>(
+      DATABASE_ID,
+      PROJECTS_ID,
+      task.projectId,
+    );
+
+    const member = await databases.getDocument(
+      DATABASE_ID,
+      MEMBERS_ID,
+      task.assigneeId,
+    );
+
+    const userInfo = await users.get(member.userId);
+
+    const assignee = {
+      ...member,
+      name: userInfo.name,
+      email: userInfo.email,
+    };
+
+    return c.json({ data: { ...task, project, assignee } });
+  })
   .post(
     "/",
     sessionMiddleware,
@@ -160,6 +204,51 @@ const app = new Hono()
           dueDate,
           assigneeId,
           position: newPosition,
+          description,
+        },
+      );
+
+      return c.json({ data: task });
+    },
+  )
+  .patch(
+    "/:taskId",
+    sessionMiddleware,
+    zValidator("json", createTaskSchema.partial()),
+    async (c) => {
+      const user = c.get("user");
+      const databases = c.get("databases");
+      const { name, status, projectId, dueDate, assigneeId, description } =
+        c.req.valid("json");
+
+      const { taskId } = c.req.param();
+
+      const existingTask = await databases.getDocument<Task>(
+        DATABASE_ID,
+        TASKS_ID,
+        taskId,
+      );
+
+      // if not member of the workspace then not create any project
+      const member = await getMember({
+        databases,
+        workspaceId: existingTask.workspaceId,
+        userId: user.$id,
+      });
+      if (!member) {
+        return c.json({ error: "Unauthorized" }, 401);
+      }
+
+      const task = await databases.updateDocument(
+        DATABASE_ID,
+        TASKS_ID,
+        taskId,
+        {
+          name,
+          status,
+          projectId,
+          dueDate,
+          assigneeId,
           description,
         },
       );

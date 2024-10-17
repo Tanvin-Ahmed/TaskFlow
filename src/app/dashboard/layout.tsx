@@ -2,6 +2,7 @@ import DashboardNavbar from "@/components/custom/dashboard/shared/navbar";
 import Sidebar from "@/components/custom/shared/sidebar/sidebar";
 import CreateProjectModal from "@/features/projects/components/create-project-modal";
 import CreateTaskModal from "@/features/tasks/components/create-task-modal";
+import UpdateTaskModal from "@/features/tasks/components/update-task-modal";
 import CreateWorkspaceModal from "@/features/workspaces/components/create-workspace-modal";
 import { ReactNode } from "react";
 
@@ -15,6 +16,7 @@ const DashboardLayout = ({ children }: Props) => {
       <CreateWorkspaceModal />
       <CreateProjectModal />
       <CreateTaskModal />
+      <UpdateTaskModal />
       <div className="flex h-full w-full">
         <div className="fixed left-0 top-0 hidden h-full overflow-y-auto lg:block lg:w-[264px]">
           <Sidebar />
