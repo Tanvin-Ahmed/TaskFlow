@@ -6,6 +6,7 @@ import { getMember } from "@/features/members/utils";
 import { DATABASE_ID, MEMBERS_ID, PROJECTS_ID, TASKS_ID } from "@/config";
 import { ID, Query } from "node-appwrite";
 import { createAdminClient } from "@/lib/appwrite";
+import { PopulatedTask, Task } from "../types";
 
 const app = new Hono()
   .get(
@@ -40,7 +41,11 @@ const app = new Hono()
       if (dueDate) query.push(Query.equal("dueDate", dueDate));
       if (search) query.push(Query.search("name", search));
 
-      const tasks = await databases.listDocuments(DATABASE_ID, TASKS_ID, query);
+      const tasks = await databases.listDocuments<Task>(
+        DATABASE_ID,
+        TASKS_ID,
+        query,
+      );
 
       if (!tasks.total) {
         return c.json({ data: tasks });
@@ -76,16 +81,24 @@ const app = new Hono()
       );
 
       // populate project and assignee information with tasks information
-      const populatedTasks = tasks.documents.map((task) => {
+      const populatedTasks = tasks.documents.map<PopulatedTask>((task) => {
         const project = projects.documents.find(
-          (p) => p.$Id === task.projectId,
-        );
-        const assignee = assignees.find((a) => a.$id === task.assigneeId);
+          (p) => p.$id === task.projectId,
+        )!;
+        const assignee = assignees.find((a) => a.$id === task.assigneeId)!;
 
         return {
           ...task,
-          project,
-          assignee,
+          project: {
+            name: project.name,
+            imageUrl: task?.imageUrl,
+            $id: project.$id,
+          },
+          assignee: {
+            name: assignee.name,
+            email: assignee.email,
+            $id: assignee.$id,
+          },
         };
       });
 
@@ -153,6 +166,30 @@ const app = new Hono()
 
       return c.json({ data: task });
     },
-  );
+  )
+  .delete("/:taskId", sessionMiddleware, async (c) => {
+    const user = c.get("user");
+    const databases = c.get("databases");
+    const { taskId } = c.req.param();
+
+    const task = await databases.getDocument<Task>(
+      DATABASE_ID,
+      TASKS_ID,
+      taskId,
+    );
+
+    const member = await getMember({
+      databases,
+      workspaceId: task.workspaceId,
+      userId: user.$id,
+    });
+    if (!member) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
+
+    await databases.deleteDocument(DATABASE_ID, TASKS_ID, taskId);
+
+    return c.json({ data: { $id: task.$id } });
+  });
 
 export default app;
