@@ -21,3 +21,13 @@ export const getTaskSchema = z.object({
   search: z.string().nullish(),
   dueDate: z.string().nullish(),
 });
+
+export const BulkUpdateTaskReqSchema = z.object({
+  tasks: z.array(
+    z.object({
+      $id: z.string(),
+      status: z.nativeEnum(TaskStatus),
+      position: z.number().int().positive().min(1000).max(1000000),
+    }),
+  ),
+});

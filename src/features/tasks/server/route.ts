@@ -1,7 +1,11 @@
 import { sessionMiddleware } from "@/lib/session-middleware";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
-import { createTaskSchema, getTaskSchema } from "../schema";
+import {
+  BulkUpdateTaskReqSchema,
+  createTaskSchema,
+  getTaskSchema,
+} from "../schema";
 import { getMember } from "@/features/members/utils";
 import { DATABASE_ID, MEMBERS_ID, PROJECTS_ID, TASKS_ID } from "@/config";
 import { ID, Query } from "node-appwrite";
@@ -209,6 +213,62 @@ const app = new Hono()
       );
 
       return c.json({ data: task });
+    },
+  )
+  .post(
+    "/bulk-update",
+    sessionMiddleware,
+    zValidator("json", BulkUpdateTaskReqSchema),
+    async (c) => {
+      const user = c.get("user");
+      const databases = c.get("databases");
+      const { tasks } = c.req.valid("json");
+
+      const tasksToUpdate = await databases.listDocuments<Task>(
+        DATABASE_ID,
+        TASKS_ID,
+        [
+          Query.contains(
+            "$id",
+            tasks.map((t) => t.$id),
+          ),
+        ],
+      );
+
+      const workspaceIds = new Set(
+        tasksToUpdate.documents.map((t) => t.workspaceId),
+      );
+
+      if (workspaceIds.size !== 1) {
+        return c.json(
+          { error: "All tasks must be belong to the same workspace" },
+          409,
+        );
+      }
+
+      const workspaceId = workspaceIds.values().next().value!;
+
+      const member = await getMember({
+        databases,
+        workspaceId,
+        userId: user.$id,
+      });
+      if (!member) {
+        return c.json({ error: "Unauthorized" }, 401);
+      }
+
+      const updatedTasks = await Promise.all(
+        tasks.map((task) => {
+          const { $id, status, position } = task;
+
+          return databases.updateDocument<Task>(DATABASE_ID, TASKS_ID, $id, {
+            status,
+            position,
+          });
+        }),
+      );
+
+      return c.json({ data: updatedTasks });
     },
   )
   .patch(
