@@ -17,9 +17,15 @@ import { useCallback } from "react";
 import { TaskStatus } from "../types";
 import { useBulkUpdateTasks } from "../api/use-bulk-update-tasks";
 import DataCalender from "./data-calender";
+import useProjectId from "@/features/projects/hooks/use-project-id";
 
-const TaskViewSwitcher = () => {
+interface Props {
+  hideProjectFilter?: boolean;
+}
+
+const TaskViewSwitcher = ({ hideProjectFilter }: Props) => {
   const workspaceId = useWorkspaceId();
+  const urlProjectId = useProjectId();
   const { open } = useCreateTaskModal();
 
   const { mutate: bulkUpdate } = useBulkUpdateTasks();
@@ -28,7 +34,7 @@ const TaskViewSwitcher = () => {
     workspaceId,
     status: status ?? undefined,
     assigneeId: assigneeId ?? undefined,
-    projectId: projectId ?? undefined,
+    projectId: hideProjectFilter ? urlProjectId : (projectId ?? undefined),
     dueDate: dueDate ?? undefined,
     search: search ?? undefined,
   });
@@ -57,24 +63,24 @@ const TaskViewSwitcher = () => {
       className="w-full flex-1 rounded-lg border"
     >
       <div className="flex h-full flex-col overflow-auto p-4">
-        <div className="flex flex-col items-center justify-between gap-y-2 lg:flex-row">
-          <TabsList className="w-full lg:w-auto">
-            <TabsTrigger className="h-8 w-full lg:w-auto" value="table">
+        <div className="flex flex-col items-center justify-between gap-y-2 sm:flex-row">
+          <TabsList className="w-full sm:w-auto">
+            <TabsTrigger className="h-8 w-full sm:w-auto" value="table">
               Table
             </TabsTrigger>
-            <TabsTrigger className="h-8 w-full lg:w-auto" value="kanban">
+            <TabsTrigger className="h-8 w-full sm:w-auto" value="kanban">
               Kanban
             </TabsTrigger>
-            <TabsTrigger className="h-8 w-full lg:w-auto" value="calender">
+            <TabsTrigger className="h-8 w-full sm:w-auto" value="calender">
               Calender
             </TabsTrigger>
           </TabsList>
-          <Button onClick={open} size={"sm"} className="w-full lg:w-auto">
+          <Button onClick={open} size={"sm"} className="w-full sm:w-auto">
             <PlusIcon className="mr-2 size-4" /> New
           </Button>
         </div>
         <DottedSeparator className="my-4" />
-        <DataFilters />
+        <DataFilters hideProjectFilters={hideProjectFilter} />
         <DottedSeparator className="my-4" />
         {isLoadingTasks ? (
           <div

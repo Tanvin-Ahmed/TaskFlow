@@ -39,7 +39,7 @@ const EventCard = ({ assignee, id, project, status, title }: Props) => {
   const handleGoToTaskPage = (e: MouseEvent<HTMLDivElement>) => {
     e.stopPropagation();
 
-    router.push(`/workspace/${workspaceId}/task/${id}`);
+    router.push(`dashboard/workspace/${workspaceId}/task/${id}`);
   };
 
   return (

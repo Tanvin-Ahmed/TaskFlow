@@ -20,7 +20,7 @@ const ProjectPage = async ({ params }: Props) => {
   return initialProjectValue ? (
     <section className="flex flex-col gap-y-4">
       <ProjectHeader initialValues={initialProjectValue} />
-      <TaskViewSwitcher />
+      <TaskViewSwitcher hideProjectFilter />
     </section>
   ) : (
     <section className="flex h-[75vh] w-full items-center justify-center">

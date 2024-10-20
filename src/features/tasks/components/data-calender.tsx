@@ -68,7 +68,7 @@ const DataCalender = ({ data }: Props) => {
       defaultView="month"
       toolbar
       showAllEvents
-      className="h-full"
+      className="hide-scrollbar h-full"
       max={new Date(new Date().setFullYear(new Date().getFullYear() + 1))}
       formats={{
         weekdayFormat: (date, culture, localizer) =>

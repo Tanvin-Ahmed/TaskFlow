@@ -17,6 +17,7 @@ import useTaskFilters from "../hooks/use-task-filters";
 import MemberAvatar from "@/features/members/components/member-avatar";
 import ProjectAvatar from "@/features/projects/components/project-avatar";
 import DatePicker from "@/components/custom/shared/date-picker";
+import { cn } from "@/lib/utils";
 
 interface Props {
   hideProjectFilters?: boolean;
@@ -96,9 +97,9 @@ const DataFilters = ({ hideProjectFilters }: Props) => {
   return isLoading ? (
     <></>
   ) : (
-    <div className="flex flex-col gap-2 md:flex-row">
+    <div className="flex flex-col gap-2 sm:flex-row">
       <Select defaultValue={status ?? undefined} onValueChange={onStatusChange}>
-        <SelectTrigger className={"h-8 w-full md:w-auto"}>
+        <SelectTrigger className={"h-8 w-full sm:w-auto"}>
           <div className="flex items-center pr-2">
             <ListChecksIcon className="mr-2 size-4" />
             <SelectValue placeholder={"All statuses"} />
@@ -120,7 +121,7 @@ const DataFilters = ({ hideProjectFilters }: Props) => {
         defaultValue={assigneeId ?? undefined}
         onValueChange={onAssigneeChange}
       >
-        <SelectTrigger className={"h-8 w-full md:w-auto"}>
+        <SelectTrigger className={"h-8 w-full sm:w-auto"}>
           <div className="flex items-center pr-2">
             <UserIcon className="mr-2 size-4" />
             <SelectValue placeholder={"All assignees"} />
@@ -145,7 +146,11 @@ const DataFilters = ({ hideProjectFilters }: Props) => {
         defaultValue={projectId ?? undefined}
         onValueChange={onProjectChange}
       >
-        <SelectTrigger className={"h-8 w-full md:w-auto"}>
+        <SelectTrigger
+          className={cn("h-8 w-full sm:w-auto", {
+            hidden: hideProjectFilters,
+          })}
+        >
           <div className="flex items-center pr-2">
             <FolderIcon className="mr-2 size-4" />
             <SelectValue placeholder={"All projects"} />
@@ -170,7 +175,7 @@ const DataFilters = ({ hideProjectFilters }: Props) => {
       </Select>
       <DatePicker
         placeholder="Due date"
-        className="h-8 w-full text-black md:w-auto"
+        className="h-8 w-full text-black sm:w-auto"
         value={dueDate ? new Date(dueDate) : undefined}
         onChange={(date) => {
           setFilters({ dueDate: date ? date.toISOString() : null });
