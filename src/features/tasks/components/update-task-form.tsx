@@ -226,7 +226,6 @@ const UpdateTaskForm = ({
                         {...field}
                       />
                     </FormControl>
-                    <FormMessage />
                   </FormItem>
                 )}
               />

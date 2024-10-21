@@ -45,6 +45,8 @@ const Navigation = () => {
         let fullHref;
         if (route.href === "/tasks") {
           fullHref = `/dashboard/workspaces/${workspaceId}${route.href}`;
+        } else if (route.href === "/dashboard") {
+          fullHref = `${route.href}/workspaces/${workspaceId}`;
         } else {
           fullHref = `/workspaces/${workspaceId}${route.href}`;
         }
