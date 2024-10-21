@@ -85,8 +85,10 @@ const UpdateProjectForm = ({ onCancel, initialValue }: Props) => {
     mutate(
       { form: finalValues, param: { projectId: initialValue.$id } },
       {
-        onSuccess: () => {
-          form.reset();
+        onSuccess: ({ data }) => {
+          router.push(
+            `/dashboard/workspaces/${initialValue.workspaceId}/projects/${data.$id}`,
+          );
         },
       },
     );

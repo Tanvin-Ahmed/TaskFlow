@@ -91,14 +91,7 @@ const UpdateWorkspaceForm = ({ onCancel, initialValue }: Props) => {
       image: values.image instanceof File ? values.image : "",
     };
 
-    mutate(
-      { form: finalValues, param: { workspaceId: initialValue.$id } },
-      {
-        onSuccess: () => {
-          form.reset();
-        },
-      },
-    );
+    mutate({ form: finalValues, param: { workspaceId: initialValue.$id } });
   };
 
   const fullInviteLink = `${window.location.origin}/workspaces/${initialValue.$id}/join/${initialValue.inviteCode}`;

@@ -1,24 +1,14 @@
 import { getCurrent } from "@/features/auth/server/queries";
-import { getWorkspace } from "@/features/workspaces/queries";
-import UpdateWorkspaceForm from "@/features/workspaces/components/update-workspace-form";
 import { redirect } from "next/navigation";
+import WorkspaceSettingsClient from "./client";
 
-interface Props {
-  params: {
-    workspaceId: string;
-  };
-}
-
-const WorkspaceIdSettingsPage = async ({ params }: Props) => {
-  const { workspaceId } = params;
+const WorkspaceIdSettingsPage = async () => {
   const user = await getCurrent();
   if (!user) redirect("/sign-in");
 
-  const initialValues = await getWorkspace(workspaceId);
-
   return (
     <section className="w-full lg:max-w-xl">
-      <UpdateWorkspaceForm initialValue={initialValues} />
+      <WorkspaceSettingsClient />
     </section>
   );
 };

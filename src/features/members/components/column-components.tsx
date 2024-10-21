@@ -5,7 +5,6 @@ import { Member, MemberRole } from "../types";
 import { useEffect, useState } from "react";
 import { useUpdateMember } from "../api/use-update-member";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,7 +17,6 @@ import useConfirm from "@/hooks/use-confirm";
 import { useDeleteMember } from "../api/use-delete-member";
 
 export const AdminSwitcher = ({ data }: { data: Row<Member> }) => {
-  const router = useRouter();
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const role = data.getValue("role");
   const memberId = data.getValue("$id") as string;
@@ -41,7 +39,6 @@ export const AdminSwitcher = ({ data }: { data: Row<Member> }) => {
       {
         onSuccess: () => {
           toast.success(`${memberName} is now an admin.`);
-          router.refresh();
         },
         onError: () => {
           setIsAdmin(role === MemberRole.ADMIN);
@@ -59,7 +56,6 @@ export const AdminSwitcher = ({ data }: { data: Row<Member> }) => {
 };
 
 export const MemberTableAction = ({ data }: { data: Row<Member> }) => {
-  const router = useRouter();
   const name = data.getValue("name") as string;
   const $id = data.getValue("$id") as string;
 
@@ -75,14 +71,7 @@ export const MemberTableAction = ({ data }: { data: Row<Member> }) => {
     const ok = await confirm();
     if (!ok) return;
 
-    deleteMember(
-      { param: { memberId } },
-      {
-        onSuccess: () => {
-          router.refresh();
-        },
-      },
-    );
+    deleteMember({ param: { memberId } });
   };
 
   return (
