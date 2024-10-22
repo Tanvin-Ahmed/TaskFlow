@@ -1,12 +1,12 @@
-interface Props {
-  params: {
-    workspaceId: string;
-  };
-}
+import { getCurrent } from "@/features/auth/server/queries";
+import { redirect } from "next/navigation";
+import WorkspaceIdClient from "./client";
 
-const WorkspacePage = ({ params }: Props) => {
-  const { workspaceId } = params;
-  return <div>WorkspacePage</div>;
+const WorkspacePage = async () => {
+  const user = getCurrent();
+  if (!user) redirect("/sign-in");
+
+  return <WorkspaceIdClient />;
 };
 
 export default WorkspacePage;
