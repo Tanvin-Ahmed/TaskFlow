@@ -17,7 +17,7 @@ export const useLogout = () => {
       return await res.json();
     },
     onSuccess: () => {
-      router.refresh();
+      router.push("/sign-in");
       queryClient.invalidateQueries({ queryKey: ["current"] });
       queryClient.invalidateQueries({ queryKey: ["workspaces"] });
     },

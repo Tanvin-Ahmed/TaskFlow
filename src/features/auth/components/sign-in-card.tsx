@@ -21,6 +21,7 @@ import Link from "next/link";
 import { signInSchema } from "@/features/auth/schema";
 import { useSignIn } from "../api/use-signin";
 import { Loader } from "lucide-react";
+import { signUpWithGithub, signUpWithGoogle } from "@/lib/oauth";
 
 const SignInCard = () => {
   const { mutate, isPending } = useSignIn();
@@ -91,6 +92,7 @@ const SignInCard = () => {
             variant={"secondary"}
             size={"lg"}
             className="w-full"
+            onClick={() => signUpWithGoogle()}
           >
             <FcGoogle className="mr-2 size-5" />
             Login with Google
@@ -100,6 +102,7 @@ const SignInCard = () => {
             variant={"outline"}
             size={"lg"}
             className="w-full"
+            onClick={() => signUpWithGithub()}
           >
             <FaGithub className="mr-2 size-5" />
             Login with Github

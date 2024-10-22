@@ -1,4 +1,3 @@
-"use server";
 import { createSessionClient } from "./../../../lib/appwrite";
 
 export const getCurrent = async () => {

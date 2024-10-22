@@ -31,7 +31,7 @@ const DataFilters = ({ hideProjectFilters }: Props) => {
   const { data: members, isLoading: isLoadingMembers } = useGetMembers({
     workspaceId,
   });
-  const [{ status, assigneeId, projectId, dueDate, search }, setFilters] =
+  const [{ status, assigneeId, projectId, dueDate }, setFilters] =
     useTaskFilters();
 
   const [memberOptions, setMemberOptions] = useState<

@@ -5,18 +5,28 @@ import UserButton from "@/features/auth/components/user-button";
 import { usePathname } from "next/navigation";
 import MobileSidebar from "../../shared/sidebar/mobile-sidebar";
 
-const pageDetails = [
-  {
-    title: "Dashboard",
-    description: "Monitor all of your projects and tasks here.",
-    href: "/dashboard",
+const pageNameMap = {
+  tasks: {
+    title: "My Tasks",
+    description: "View all of your tasks here",
   },
-];
+  projects: {
+    title: "My Projects",
+    description: "View all of your projects here",
+  },
+};
+
+const defaultMap = {
+  title: "Dashboard",
+  description: "Monitor all of your projects and tasks here.",
+};
 
 const DashboardNavbar = () => {
   const pathname = usePathname();
+  const pathnameParts = pathname.split("/");
+  const pathnameKey = pathnameParts[4] as keyof typeof pageNameMap;
 
-  const details = pageDetails.find((p) => p.href === pathname);
+  const { description, title } = pageNameMap[pathnameKey] || defaultMap;
 
   return (
     <header className="sticky top-0 z-40 w-full backdrop-blur-sm dark:bg-indigo-900/20">
@@ -25,11 +35,11 @@ const DashboardNavbar = () => {
           "container mx-auto flex items-center justify-between p-2",
         )}
       >
-        <div className="hidden flex-col lg:flex">
-          <h1 className="text-2xl font-bold">{details?.title}</h1>
-          <p className="text-muted-foreground">{details?.description}</p>
-        </div>
         <MobileSidebar />
+        <div className="hidden flex-col lg:flex">
+          <h1 className="text-2xl font-bold">{title}</h1>
+          <p className="text-muted-foreground">{description}</p>
+        </div>
         <div className="flex items-center justify-center gap-2">
           <UserButton />
           <ThemeToggle />

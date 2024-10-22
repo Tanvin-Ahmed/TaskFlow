@@ -42,7 +42,7 @@ const app = new Hono()
           return {
             ...member,
             role: member.role as MemberRole,
-            name: user.name,
+            name: user.name || user.email,
             email: user.email,
           };
         }),
