@@ -4,9 +4,10 @@ import PageError from "@/components/custom/shared/page-error";
 import PageLoader from "@/components/custom/shared/page-loader";
 import { useGetMembers } from "@/features/members/api/use-get-members";
 import useGetProjects from "@/features/projects/api/use-get-projects";
-import useCreateProjectModal from "@/features/projects/hooks/use-create-project-modal";
 import useGetTasks from "@/features/tasks/api/use-get-tasks";
 import useGetWorkspaceAnalytics from "@/features/workspaces/api/use-get-workspace-analytics";
+import MemberList from "@/features/workspaces/components/member-list";
+import ProjectList from "@/features/workspaces/components/project-list";
 import TaskList from "@/features/workspaces/components/task-list";
 import useWorkspaceId from "@/features/workspaces/hooks/use-workspace-id";
 
@@ -23,8 +24,6 @@ const WorkspaceIdClient = () => {
   const { data: members, isLoading: isLoadingMembers } = useGetMembers({
     workspaceId,
   });
-
-  const { open: createProject } = useCreateProjectModal();
 
   const isLoading =
     isLoadingAnalytics ||
@@ -47,6 +46,8 @@ const WorkspaceIdClient = () => {
       <Analytics data={analytics} />
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <TaskList data={tasks.documents} total={tasks.total} />
+        <ProjectList data={projects.documents} total={projects.total} />
+        <MemberList data={members.documents} total={members.total} />
       </div>
     </div>
   );

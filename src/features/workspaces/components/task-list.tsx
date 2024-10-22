@@ -9,6 +9,7 @@ import Link from "next/link";
 import useWorkspaceId from "../hooks/use-workspace-id";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatDistanceToNow } from "date-fns";
+import { useTheme } from "next-themes";
 
 interface Props {
   data: PopulatedTask[];
@@ -16,6 +17,7 @@ interface Props {
 }
 
 const TaskList = ({ data, total }: Props) => {
+  const { resolvedTheme } = useTheme();
   const workspaceId = useWorkspaceId();
   const { open: createTask } = useCreateTaskModal();
 
@@ -24,7 +26,11 @@ const TaskList = ({ data, total }: Props) => {
       <div className="rounded-lg bg-muted p-4">
         <div className="flex items-center justify-between">
           <p className="text-lg font-semibold">Tasks {total}</p>
-          <Button variant={"muted"} size={"icon"} onClick={createTask}>
+          <Button
+            variant={resolvedTheme === "dark" ? "outline" : "muted"}
+            size={"icon"}
+            onClick={createTask}
+          >
             <PlusIcon className="size-4 text-neutral-400" />
           </Button>
         </div>
@@ -58,7 +64,11 @@ const TaskList = ({ data, total }: Props) => {
             No tasks found!
           </li>
         </ul>
-        <Button variant={"muted"} className="mt-4 w-full" asChild>
+        <Button
+          variant={resolvedTheme === "dark" ? "outline" : "muted"}
+          className="mt-4 w-full"
+          asChild
+        >
           <Link href={`/dashboard/workspaces/${workspaceId}/tasks`}>
             Show All
           </Link>
