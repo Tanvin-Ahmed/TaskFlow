@@ -6,17 +6,19 @@ import {
   DATABASE_ID,
   IMAGES_BUCKET_ID,
   MEMBERS_ID,
+  PROJECTS_ID,
   TASKS_ID,
   WORKSPACES_ID,
 } from "@/config";
 import { ID, Query } from "node-appwrite";
-import { MemberRole } from "@/features/members/types";
+import { Member, MemberRole } from "@/features/members/types";
 import { generateInviteCode } from "@/lib/utils";
 import { getMember } from "@/features/members/utils";
 import { z } from "zod";
 import { Workspace } from "../types";
 import { endOfMonth, startOfMonth, subMonths } from "date-fns";
-import { TaskStatus } from "@/features/tasks/types";
+import { Task, TaskStatus } from "@/features/tasks/types";
+import { Project } from "@/features/projects/types";
 
 const app = new Hono()
   .get("/", sessionMiddleware, async (c) => {
@@ -242,6 +244,7 @@ const app = new Hono()
       const { name, image } = c.req.valid("form");
 
       let uploadedImageUrl: string | undefined;
+      let imageId: string | undefined;
 
       if (image instanceof File) {
         const file = await storage.createFile(
@@ -249,6 +252,7 @@ const app = new Hono()
           ID.unique(),
           image,
         );
+        imageId = file.$id;
 
         const arrayBuffer = await storage.getFilePreview(
           IMAGES_BUCKET_ID,
@@ -266,6 +270,7 @@ const app = new Hono()
           name,
           userId: user.$id,
           imageUrl: uploadedImageUrl,
+          imageId,
           inviteCode: generateInviteCode(8),
         },
       );
@@ -401,6 +406,8 @@ const app = new Hono()
   .delete("/:workspaceId", sessionMiddleware, async (c) => {
     const databases = c.get("databases");
     const user = c.get("user");
+    const storage = c.get("storage");
+
     const { workspaceId } = c.req.param();
 
     const member = await getMember({
@@ -413,7 +420,66 @@ const app = new Hono()
       return c.json({ error: "Unauthorized" }, 401);
     }
 
-    // TODO: delete members projects and tasks
+    // delete all members of the workspace
+    const members = await databases.listDocuments<Member>(
+      DATABASE_ID,
+      MEMBERS_ID,
+      [Query.equal("workspaceId", workspaceId)],
+    );
+    if (members.total) {
+      const deletePromises = members.documents.map((member) =>
+        databases.deleteDocument(DATABASE_ID, MEMBERS_ID, member.$id),
+      );
+
+      await Promise.all(deletePromises);
+    }
+
+    // delete all projects of the workspace
+    const projects = await databases.listDocuments<Project>(
+      DATABASE_ID,
+      PROJECTS_ID,
+      [Query.equal("workspaceId", workspaceId)],
+    );
+    if (projects.total) {
+      const deleteAllImagePromises = projects.documents
+        .map((project) =>
+          project?.imageId
+            ? storage.deleteFile(IMAGES_BUCKET_ID, project.imageId)
+            : false,
+        )
+        .filter(Boolean);
+
+      await Promise.all(deleteAllImagePromises);
+
+      const deletePromises = projects.documents.map((project) =>
+        databases.deleteDocument(DATABASE_ID, PROJECTS_ID, project.$id),
+      );
+
+      await Promise.all(deletePromises);
+    }
+
+    // delete all tasks of the workspace
+    const tasks = await databases.listDocuments<Task>(DATABASE_ID, TASKS_ID, [
+      Query.equal("workspaceId", workspaceId),
+    ]);
+    if (tasks.total) {
+      const deletePromises = tasks.documents.map((tasks) =>
+        databases.deleteDocument(DATABASE_ID, TASKS_ID, tasks.$id),
+      );
+
+      await Promise.all(deletePromises);
+    }
+
+    // finally delete the workspace
+    const workspace = await databases.getDocument<Workspace>(
+      DATABASE_ID,
+      WORKSPACES_ID,
+      workspaceId,
+    );
+
+    if (workspace?.imageId) {
+      await storage.deleteFile(IMAGES_BUCKET_ID, workspace.imageId);
+    }
 
     await databases.deleteDocument(DATABASE_ID, WORKSPACES_ID, workspaceId);
 

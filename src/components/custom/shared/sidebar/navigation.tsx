@@ -59,7 +59,8 @@ const Navigation = () => {
               className={cn(
                 "flex items-center gap-2.5 rounded-md p-2.5 font-medium text-neutral-500 transition hover:text-primary",
                 {
-                  "bg-white text-primary shadow-sm hover:opacity-100": isActive,
+                  "border bg-white text-primary shadow-sm hover:opacity-100 dark:bg-muted":
+                    isActive,
                 },
               )}
             >

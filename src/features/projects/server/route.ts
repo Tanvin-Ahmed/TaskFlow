@@ -8,7 +8,7 @@ import { z } from "zod";
 import { createProjectSchema, updateProjectSchema } from "../schema";
 import { Project } from "../types";
 import { endOfMonth, startOfMonth, subMonths } from "date-fns";
-import { TaskStatus } from "@/features/tasks/types";
+import { Task, TaskStatus } from "@/features/tasks/types";
 
 const app = new Hono()
   .get(
@@ -358,6 +358,8 @@ const app = new Hono()
   .delete("/:projectId", sessionMiddleware, async (c) => {
     const databases = c.get("databases");
     const user = c.get("user");
+    const storage = c.get("storage");
+
     const { projectId } = c.req.param();
 
     const existingProject = await databases.getDocument<Project>(
@@ -376,7 +378,28 @@ const app = new Hono()
       return c.json({ error: "Unauthorized" }, 401);
     }
 
-    // TODO: delete tasks
+    // delete all tasks of the project
+    const tasks = await databases.listDocuments<Task>(DATABASE_ID, TASKS_ID, [
+      Query.equal("projectId", projectId),
+    ]);
+    if (tasks.total) {
+      const deletePromises = tasks.documents.map((tasks) =>
+        databases.deleteDocument(DATABASE_ID, TASKS_ID, tasks.$id),
+      );
+
+      await Promise.all(deletePromises);
+    }
+
+    // finally delete the project
+    const project = await databases.getDocument<Project>(
+      DATABASE_ID,
+      PROJECTS_ID,
+      projectId,
+    );
+
+    if (project?.imageId) {
+      await storage.deleteFile(IMAGES_BUCKET_ID, project.imageId);
+    }
 
     await databases.deleteDocument(DATABASE_ID, PROJECTS_ID, projectId);
 
