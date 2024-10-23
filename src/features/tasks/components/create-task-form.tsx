@@ -31,6 +31,8 @@ import MemberAvatar from "@/features/members/components/member-avatar";
 import { TaskStatus } from "../types";
 import ProjectAvatar from "@/features/projects/components/project-avatar";
 import { Textarea } from "@/components/ui/textarea";
+import useProjectId from "@/features/projects/hooks/use-project-id";
+import useCreateTaskModal from "../hooks/use-create-task-modal";
 
 interface Props {
   onCancel?: () => void;
@@ -43,16 +45,26 @@ interface Props {
     $id: string;
     name: string;
   }[];
+  status?: TaskStatus;
 }
 
-const CreateTaskForm = ({ onCancel, memberOptions, projectOptions }: Props) => {
+const CreateTaskForm = ({
+  onCancel,
+  memberOptions,
+  projectOptions,
+  status,
+}: Props) => {
   const workspaceId = useWorkspaceId();
+  const projectId = useProjectId();
   const { mutate, isPending } = useCreateTask();
+  const { setStatusTo } = useCreateTaskModal();
 
   const form = useForm<z.infer<typeof createTaskSchema>>({
     resolver: zodResolver(createTaskSchema),
     defaultValues: {
       workspaceId,
+      status,
+      projectId,
     },
   });
 
@@ -63,6 +75,7 @@ const CreateTaskForm = ({ onCancel, memberOptions, projectOptions }: Props) => {
         onSuccess: () => {
           form.reset();
           onCancel?.();
+          setStatusTo("");
         },
       },
     );
@@ -150,7 +163,7 @@ const CreateTaskForm = ({ onCancel, memberOptions, projectOptions }: Props) => {
                       onValueChange={field.onChange}
                     >
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger disabled={status ? !!status : false}>
                           <SelectValue placeholder={"Select status"} />
                         </SelectTrigger>
                       </FormControl>
@@ -181,6 +194,7 @@ const CreateTaskForm = ({ onCancel, memberOptions, projectOptions }: Props) => {
                     <Select
                       defaultValue={field.value}
                       onValueChange={field.onChange}
+                      disabled={!!projectId}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -231,7 +245,10 @@ const CreateTaskForm = ({ onCancel, memberOptions, projectOptions }: Props) => {
                 type="button"
                 size={"lg"}
                 variant={"secondary"}
-                onClick={onCancel}
+                onClick={() => {
+                  onCancel?.();
+                  setStatusTo("");
+                }}
                 className={cn("invisible w-full sm:w-fit", {
                   visible: onCancel,
                 })}

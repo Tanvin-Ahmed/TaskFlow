@@ -371,14 +371,28 @@ const app = new Hono()
         return c.json({ error: "Unauthorized" }, 401);
       }
 
+      const existingWorkspace = await databases.getDocument<Workspace>(
+        DATABASE_ID,
+        WORKSPACES_ID,
+        workspaceId,
+      );
+
       let uploadedImageUrl: string | undefined;
+      let imageId: string | undefined;
 
       if (image instanceof File) {
+        // delete existing image from bucket
+        if (existingWorkspace.imageId) {
+          await storage.deleteFile(IMAGES_BUCKET_ID, existingWorkspace.imageId);
+        }
+
         const file = await storage.createFile(
           IMAGES_BUCKET_ID,
           ID.unique(),
           image,
         );
+
+        imageId = file.$id;
 
         const arrayBuffer = await storage.getFilePreview(
           IMAGES_BUCKET_ID,
@@ -397,6 +411,7 @@ const app = new Hono()
         {
           name,
           imageUrl: uploadedImageUrl,
+          imageId: imageId ?? existingWorkspace?.imageId,
         },
       );
 

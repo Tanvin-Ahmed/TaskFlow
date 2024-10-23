@@ -279,7 +279,7 @@ const app = new Hono()
         uploadedImageUrl = `data:image/png;base64,${Buffer.from(arrayBuffer).toString("base64")}`;
       }
 
-      const project = await databases.createDocument(
+      const project = await databases.createDocument<Project>(
         DATABASE_ID,
         PROJECTS_ID,
         ID.unique(),
@@ -324,13 +324,21 @@ const app = new Hono()
       }
 
       let uploadedImageUrl: string | undefined;
+      let imageId: string | undefined;
 
       if (image instanceof File) {
+        // delete existing image from bucket
+        if (existingProject.imageId) {
+          await storage.deleteFile(IMAGES_BUCKET_ID, existingProject.imageId);
+        }
+
         const file = await storage.createFile(
           IMAGES_BUCKET_ID,
           ID.unique(),
           image,
         );
+
+        imageId = file.$id;
 
         const arrayBuffer = await storage.getFilePreview(
           IMAGES_BUCKET_ID,
@@ -349,6 +357,7 @@ const app = new Hono()
         {
           name,
           imageUrl: uploadedImageUrl,
+          imageId: imageId ?? existingProject?.imageId,
         },
       );
 

@@ -48,7 +48,7 @@ const ProjectHeader = ({ initialValues }: Props) => {
                   <ProjectAvatar
                     className="size-6"
                     name={project.name}
-                    image={project.imageUrl}
+                    image={project?.imageUrl}
                   />
                   {project.name}
                 </div>

@@ -24,7 +24,7 @@ const DatePicker = ({ value, onChange, className, placeholder }: Props) => {
         <Button
           variant={"outline"}
           className={cn(
-            "w-full justify-start px-3 text-left font-normal",
+            "w-full justify-start px-3 text-left font-normal dark:text-white",
             !value && "text-muted-foreground",
             className,
           )}

@@ -46,7 +46,7 @@ const ProjectList = ({ data, total }: Props) => {
                   <CardContent className="flex items-center gap-x-2.5 p-4">
                     <ProjectAvatar
                       name={project.name}
-                      image={project?.imageId}
+                      image={project?.imageUrl}
                       className="size-8 md:size-10 lg:size-12"
                       fallbackClassName="text-lg"
                     />

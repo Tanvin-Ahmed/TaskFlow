@@ -26,7 +26,7 @@ interface Props {
 const TaskViewSwitcher = ({ hideProjectFilter }: Props) => {
   const workspaceId = useWorkspaceId();
   const urlProjectId = useProjectId();
-  const { open } = useCreateTaskModal();
+  const { open, setStatusTo } = useCreateTaskModal();
 
   const { mutate: bulkUpdate } = useBulkUpdateTasks();
   const [{ status, assigneeId, projectId, dueDate, search }] = useTaskFilters();
@@ -75,7 +75,14 @@ const TaskViewSwitcher = ({ hideProjectFilter }: Props) => {
               Calender
             </TabsTrigger>
           </TabsList>
-          <Button onClick={open} size={"sm"} className="w-full sm:w-auto">
+          <Button
+            onClick={() => {
+              open();
+              setStatusTo("");
+            }}
+            size={"sm"}
+            className="w-full sm:w-auto"
+          >
             <PlusIcon className="mr-2 size-4" /> New
           </Button>
         </div>

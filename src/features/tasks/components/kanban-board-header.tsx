@@ -1,3 +1,5 @@
+"use client";
+
 import { snakeCaseToTitleCase } from "@/lib/utils";
 import { TaskStatus } from "../types";
 import { ReactNode } from "react";
@@ -34,8 +36,9 @@ const statusIconMap: Record<TaskStatus, ReactNode> = {
 };
 
 const KanbanBoardHeader = ({ board, taskCount }: Props) => {
-  const { open } = useCreateTaskModal();
+  const { open, setStatusTo } = useCreateTaskModal();
   const icon = statusIconMap[board];
+
   return (
     <div className="flex items-center justify-between px-2 py-1.5">
       <div className="flex items-center gap-x-2">
@@ -45,7 +48,15 @@ const KanbanBoardHeader = ({ board, taskCount }: Props) => {
           {taskCount}
         </div>
       </div>
-      <Button onClick={open} variant={"ghost"} size={"icon"} className="size-5">
+      <Button
+        onClick={() => {
+          setStatusTo(board);
+          open();
+        }}
+        variant={"ghost"}
+        size={"icon"}
+        className="size-5"
+      >
         <PlusIcon className="size-4 text-neutral-500" />
       </Button>
     </div>
