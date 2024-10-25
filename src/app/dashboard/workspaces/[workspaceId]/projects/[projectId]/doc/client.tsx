@@ -26,15 +26,32 @@ import Undo from "editorjs-undo";
 // @ts-expect-error
 import DragDrop from "editorjs-drag-drop";
 import { Button } from "@/components/ui/button";
-import { UploadCloudIcon } from "lucide-react";
+import { LoaderIcon, UploadCloudIcon } from "lucide-react";
 
 import { Excalidraw, MainMenu, WelcomeScreen } from "@excalidraw/excalidraw";
 import { useTheme } from "next-themes";
-import { Theme } from "@excalidraw/excalidraw/types/element/types";
+import {
+  ExcalidrawElement,
+  Theme,
+} from "@excalidraw/excalidraw/types/element/types";
+import { useUpdateProject } from "@/features/projects/api/use-update-project";
+import useProjectId from "@/features/projects/hooks/use-project-id";
+import useGetProject from "@/features/projects/api/use-get-project";
+import PageLoader from "@/components/custom/shared/page-loader";
 
 const DocClient = () => {
+  const projectId = useProjectId();
+  const { mutate, isPending } = useUpdateProject();
+  const { data: project, isLoading: isLoadingProject } = useGetProject({
+    projectId,
+  });
+
+  console.log(project?.canvas ? JSON.parse(project.canvas) : undefined);
+
   const { resolvedTheme } = useTheme();
   const ref = useRef<EditorJS>();
+
+  const [canvas, setCanvas] = useState<readonly ExcalidrawElement[]>([]);
 
   // page load complete tracking
   const [isRenderComplete, setRenderComplete] = useState(false);
@@ -51,6 +68,7 @@ const DocClient = () => {
         },
         holder: "editorjs",
         placeholder: "Write documentation here...",
+        data: project?.docs ? JSON.parse(project?.docs) : undefined,
         tools: {
           header: {
             // @ts-expect-error
@@ -95,30 +113,49 @@ const DocClient = () => {
       ref.current = editor;
     };
 
-    if (isRenderComplete) initEditor();
-  }, [isRenderComplete]);
+    if (isRenderComplete && project) initEditor();
+  }, [isRenderComplete, project]);
 
   const onSave = async () => {
-    let docInfo: OutputData;
+    let docInfo: OutputData | undefined;
 
     if (ref.current) {
       docInfo = (await ref.current.save()) as OutputData;
     }
 
-    console.log(docInfo);
+    mutate({
+      form: {
+        canvas: canvas ? JSON.stringify(canvas) : undefined,
+        docs: docInfo ? JSON.stringify(docInfo) : undefined,
+      },
+      param: { projectId },
+    });
   };
+
+  if (isLoadingProject) {
+    return <PageLoader />;
+  }
 
   return (
     <section className="space-y-8">
       {/* header */}
       <div className="flex w-full items-center justify-between">
         <h1 className="truncate text-lg font-medium">Documentation</h1>
-        <Button size={"sm"} onClick={onSave}>
-          <UploadCloudIcon className="mr-1.5 size-3" /> Save
+        <Button size={"sm"} onClick={onSave} disabled={isPending}>
+          {isPending ? (
+            <>
+              <LoaderIcon className="mr-1.5 size-3 animate-spin text-white" />{" "}
+              Saving...
+            </>
+          ) : (
+            <>
+              <UploadCloudIcon className="mr-1.5 size-3" /> Save
+            </>
+          )}
         </Button>
       </div>
 
-      {/* main layout */}
+      {/* main layout for lg screen */}
       <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
         {/* doc */}
         <div className="h-[70vh] overflow-auto">
@@ -128,14 +165,22 @@ const DocClient = () => {
         {/* whiteboard/canvas */}
         <div className="h-[70vh] overflow-auto">
           <Excalidraw
+            initialData={{
+              elements: project?.canvas
+                ? JSON.parse(project.canvas)
+                : undefined,
+            }}
             theme={resolvedTheme as Theme}
-            onChange={(excalidrawElements, appState, files) => {
-              console.log(excalidrawElements);
+            onChange={(excalidrawElements) => {
+              setCanvas(excalidrawElements);
             }}
             UIOptions={{
               canvasActions: {
                 loadScene: false,
                 toggleTheme: false,
+              },
+              tools: {
+                image: false,
               },
             }}
           >

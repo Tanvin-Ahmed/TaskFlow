@@ -6,4 +6,6 @@ export type Project = Models.Document & {
   userId: string;
   imageId?: string;
   workspaceId: string;
+  docs?: string;
+  canvas?: string;
 };

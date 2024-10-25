@@ -19,4 +19,6 @@ export const updateProjectSchema = z.object({
       z.string().transform((value) => (value === "" ? undefined : value)),
     ])
     .optional(),
+  docs: z.string().optional(),
+  canvas: z.string().optional(),
 });
