@@ -1,5 +1,7 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
+import { DEFAULT_VALUES } from "@/constant/values";
 import useGetProjects from "@/features/projects/api/use-get-projects";
 import ProjectAvatar from "@/features/projects/components/project-avatar";
 import useCreateProjectModal from "@/features/projects/hooks/use-create-project-modal";
@@ -16,16 +18,32 @@ const Projects = () => {
   const { open } = useCreateProjectModal();
   const { data, isLoading } = useGetProjects({ workspaceId });
 
+  // TODO: if user is pro then user can create unlimited projects otherwise only 5 projects can be created per workspace
+  const isProUser = false;
+
   return (
     <div className="flex flex-col gap-y-2">
       <div className="flex items-center justify-between">
         <p className="text-xs uppercase text-neutral-500 dark:text-neutral-50">
           Projects
         </p>
-        <RiAddCircleFill
-          onClick={open}
-          className="size-5 cursor-pointer text-neutral-500 transition hover:opacity-75 dark:text-neutral-50"
-        />
+        <Button
+          size={"icon"}
+          className="m-0 size-5 rounded-full p-0"
+          disabled={
+            isProUser
+              ? false
+              : data
+                ? data.total >=
+                  DEFAULT_VALUES.FREE_VERSION_PROJECT_COUNT_PER_WORKSPACE
+                : false
+          }
+        >
+          <RiAddCircleFill
+            onClick={open}
+            className="size-5 cursor-pointer text-neutral-500 transition hover:opacity-75 dark:text-neutral-50"
+          />
+        </Button>
       </div>
       {isLoading ? (
         <div className="flex w-full items-center justify-center p-3">

@@ -4,7 +4,7 @@ import useGetProjects from "../api/use-get-projects";
 import ProjectAvatar from "./project-avatar";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { Loader, PencilIcon } from "lucide-react";
+import { FileIcon, Loader, MoreVerticalIcon, PencilIcon } from "lucide-react";
 import { Project } from "../types";
 import {
   Select,
@@ -13,6 +13,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { DropdownMenuItem } from "@radix-ui/react-dropdown-menu";
 
 interface Props {
   initialValues: Project;
@@ -59,13 +65,43 @@ const ProjectHeader = ({ initialValues }: Props) => {
       </Select>
 
       <div>
-        <Button variant={"secondary"} size={"sm"} asChild>
-          <Link
-            href={`/workspaces/${initialValues.workspaceId}/projects/${initialValues.$id}/settings`}
-          >
-            <PencilIcon className="mr-2 size-3" /> Edit Project
-          </Link>
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant={"secondary"} size={"icon"}>
+              <MoreVerticalIcon className="size-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuItem>
+              <Button
+                variant={"ghost"}
+                size={"sm"}
+                asChild
+                className="flex w-full justify-start"
+              >
+                <Link
+                  href={`/workspaces/${initialValues.workspaceId}/projects/${initialValues.$id}/settings`}
+                >
+                  <PencilIcon className="mr-2 size-3" /> Edit Project
+                </Link>
+              </Button>
+            </DropdownMenuItem>
+            <DropdownMenuItem>
+              <Button
+                variant={"ghost"}
+                size={"sm"}
+                asChild
+                className="flex w-full justify-start"
+              >
+                <Link
+                  href={`/dashboard/workspaces/${initialValues.workspaceId}/projects/${initialValues.$id}/doc`}
+                >
+                  <FileIcon className="mr-2 size-3" /> Write doc
+                </Link>
+              </Button>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </div>
   );

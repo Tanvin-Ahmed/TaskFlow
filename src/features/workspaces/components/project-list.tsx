@@ -9,6 +9,7 @@ import useCreateProjectModal from "@/features/projects/hooks/use-create-project-
 import { Project } from "@/features/projects/types";
 import ProjectAvatar from "@/features/projects/components/project-avatar";
 import { useTheme } from "next-themes";
+import { DEFAULT_VALUES } from "@/constant/values";
 
 interface Props {
   data: Project[];
@@ -21,6 +22,9 @@ const ProjectList = ({ data, total }: Props) => {
   const workspaceId = useWorkspaceId();
   const { open: createProject } = useCreateProjectModal();
 
+  // TODO: if user is pro then user can create unlimited projects otherwise only 5 projects can be created per workspace
+  const isProUser = false;
+
   return (
     <div className="col-span-1 flex flex-col gap-y-4">
       <div className="rounded-lg border p-4">
@@ -30,6 +34,14 @@ const ProjectList = ({ data, total }: Props) => {
             variant={resolvedTheme === "dark" ? "outline" : "muted"}
             size={"icon"}
             onClick={createProject}
+            disabled={
+              isProUser
+                ? false
+                : data
+                  ? total >=
+                    DEFAULT_VALUES.FREE_VERSION_PROJECT_COUNT_PER_WORKSPACE
+                  : false
+            }
           >
             <PlusIcon className="size-4 text-neutral-400" />
           </Button>
