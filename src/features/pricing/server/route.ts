@@ -20,7 +20,10 @@ const app = new Hono().post("/", sessionMiddleware, async (c) => {
     return c.json({ error: "Unauthorized" }, 401);
   }
 
-  const billingUrl = "/pricing";
+  const billingUrl =
+    process.env.NODE_ENV === "production"
+      ? "http://task-flow-brown.vercel.app/pricing"
+      : "http://localhost:3000/pricing";
 
   const subscriptionPlan = await getUserSubscriptionPlan();
 
