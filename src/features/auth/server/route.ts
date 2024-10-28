@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { signInSchema, signUpSchema } from "@/features/auth/schema";
 import { createAdminClient } from "@/lib/appwrite";
-import { ID } from "node-appwrite";
+import { ID, Permission, Role } from "node-appwrite";
 import { deleteCookie, setCookie } from "hono/cookie";
 import { AUTH_COOKIE } from "../constant";
 import { sessionMiddleware } from "@/lib/session-middleware";
@@ -43,6 +43,13 @@ const app = new Hono()
         userId: authData.$id,
         paymentStatus: PaymentStatus.Normal,
       },
+      [
+        Permission.read(Role.any()),
+        Permission.update(Role.any()),
+        Permission.update(Role.any()),
+        Permission.delete(Role.any()),
+        Permission.delete(Role.any()),
+      ],
     );
 
     // create payment user info

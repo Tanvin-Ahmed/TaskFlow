@@ -1,6 +1,6 @@
 import { DATABASE_ID, USER_PAYMENT_STATUS_ID } from "@/config";
 import { createSessionClient } from "./../../../lib/appwrite";
-import { ID, Query } from "node-appwrite";
+import { ID, Permission, Query, Role } from "node-appwrite";
 import { PaymentStatus } from "@/features/pricing/types";
 
 export const getCurrent = async () => {
@@ -38,5 +38,12 @@ export const createUserPaymentStatusInBD = async () => {
       userId: user.$id,
       paymentStatus: PaymentStatus.Normal,
     },
+    [
+      Permission.read(Role.any()),
+      Permission.update(Role.any()),
+      Permission.update(Role.any()),
+      Permission.delete(Role.any()),
+      Permission.delete(Role.any()),
+    ],
   );
 };
