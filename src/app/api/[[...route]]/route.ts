@@ -6,6 +6,7 @@ import members from "@/features/members/server/route";
 import projects from "@/features/projects/server/route";
 import tasks from "@/features/tasks/server/route";
 import pricing from "@/features/pricing/server/route";
+import webhooks from "@/features/webhooks/server/route";
 
 const app = new Hono().basePath("/api");
 
@@ -16,7 +17,8 @@ const routes = app
   .route("/members", members)
   .route("/projects", projects)
   .route("/tasks", tasks)
-  .route("/pricing", pricing);
+  .route("/pricing", pricing)
+  .route("/webhooks", webhooks);
 
 export const GET = handle(app);
 export const POST = handle(app);
