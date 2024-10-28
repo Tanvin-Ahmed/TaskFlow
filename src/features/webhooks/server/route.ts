@@ -1,16 +1,16 @@
 import { DATABASE_ID, USER_PAYMENT_STATUS_ID } from "@/config";
 import { stripe } from "@/features/pricing/server/stripe";
 import { PaymentStatus } from "@/features/pricing/types";
-import { sessionMiddleware } from "@/lib/session-middleware";
+import { createAdminClient } from "@/lib/appwrite";
 import { Hono } from "hono";
 import { Query } from "node-appwrite";
 import Stripe from "stripe";
 
-const app = new Hono().post("/stripe", sessionMiddleware, async (c) => {
+const app = new Hono().post("/stripe", async (c) => {
   const body = await c.req.text();
   const signature = c.req.header("stripe-signature") ?? "";
 
-  const databases = c.get("databases");
+  const { databases } = await createAdminClient();
 
   let event;
 
