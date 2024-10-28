@@ -1,13 +1,16 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
+import { DATABASE_ID, USER_PAYMENT_STATUS_ID } from "@/config";
 import { stripe } from "@/features/pricing/server/stripe";
+import { PaymentStatus } from "@/features/pricing/types";
+import { createAdminClient } from "@/lib/appwrite";
 import { Hono } from "hono";
+import { Query } from "node-appwrite";
 import Stripe from "stripe";
 
 const app = new Hono().post("/stripe", async (c) => {
   const body = await c.req.text();
   const signature = c.req.header("Stripe-Signature") ?? "";
 
-  //   const { databases } = await createAdminClient();
+  const { databases } = await createAdminClient();
 
   let event;
 
@@ -36,26 +39,26 @@ const app = new Hono().post("/stripe", async (c) => {
       session.subscription as string,
     );
 
-    // const existingPayment = await databases.listDocuments(
-    //   DATABASE_ID,
-    //   USER_PAYMENT_STATUS_ID,
-    //   [Query.equal("userId", session.metadata?.userId)],
-    // );
+    const existingPayment = await databases.listDocuments(
+      DATABASE_ID,
+      USER_PAYMENT_STATUS_ID,
+      [Query.equal("userId", session.metadata?.userId)],
+    );
 
-    // await databases.updateDocument(
-    //   DATABASE_ID,
-    //   USER_PAYMENT_STATUS_ID,
-    //   existingPayment.documents[0].$id,
-    //   {
-    //     paymentStatus: PaymentStatus.Pro,
-    //     stripeSubscriptionId: subscription.id,
-    //     stripeCustomerId: subscription.customer as string,
-    //     stripePriceId: subscription.items.data[0]?.price.id,
-    //     stripeCurrentPeriodEnd: new Date(
-    //       subscription.current_period_end * 1000,
-    //     ),
-    //   },
-    // );
+    await databases.updateDocument(
+      DATABASE_ID,
+      USER_PAYMENT_STATUS_ID,
+      existingPayment.documents[0].$id,
+      {
+        paymentStatus: PaymentStatus.Pro,
+        stripeSubscriptionId: subscription.id,
+        stripeCustomerId: subscription.customer as string,
+        stripePriceId: subscription.items.data[0]?.price.id,
+        stripeCurrentPeriodEnd: new Date(
+          subscription.current_period_end * 1000,
+        ),
+      },
+    );
   }
 
   if (event.type === "invoice.payment_succeeded") {
@@ -63,24 +66,24 @@ const app = new Hono().post("/stripe", async (c) => {
       session.subscription as string,
     );
 
-    // const info = await databases.listDocuments(
-    //   DATABASE_ID,
-    //   USER_PAYMENT_STATUS_ID,
-    //   [Query.equal("stripeSubscriptionId", subscription.id)],
-    // );
+    const info = await databases.listDocuments(
+      DATABASE_ID,
+      USER_PAYMENT_STATUS_ID,
+      [Query.equal("stripeSubscriptionId", subscription.id)],
+    );
 
-    // await databases.updateDocument(
-    //   DATABASE_ID,
-    //   USER_PAYMENT_STATUS_ID,
-    //   info.documents[0].$id,
-    //   {
-    //     paymentStatus: PaymentStatus.Pro,
-    //     stripePriceId: subscription.items.data[0]?.price.id,
-    //     stripeCurrentPeriodEnd: new Date(
-    //       subscription.current_period_end * 1000,
-    //     ),
-    //   },
-    // );
+    await databases.updateDocument(
+      DATABASE_ID,
+      USER_PAYMENT_STATUS_ID,
+      info.documents[0].$id,
+      {
+        paymentStatus: PaymentStatus.Pro,
+        stripePriceId: subscription.items.data[0]?.price.id,
+        stripeCurrentPeriodEnd: new Date(
+          subscription.current_period_end * 1000,
+        ),
+      },
+    );
   }
 
   return c.text("Success", 200);
