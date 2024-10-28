@@ -1,6 +1,6 @@
 import { sessionMiddleware } from "@/lib/session-middleware";
 import { Hono } from "hono";
-import { getAbsolutePath, PLANS } from "../libs/utils";
+import { PLANS } from "../libs/utils";
 import { getUserSubscriptionPlan, stripe } from "./stripe";
 import { UserPaymentStatus } from "../types";
 import { DATABASE_ID, USER_PAYMENT_STATUS_ID } from "@/config";
@@ -20,7 +20,7 @@ const app = new Hono().post("/", sessionMiddleware, async (c) => {
     return c.json({ error: "Unauthorized" }, 401);
   }
 
-  const billingUrl = getAbsolutePath("/pricing");
+  const billingUrl = "/pricing";
 
   const subscriptionPlan = await getUserSubscriptionPlan();
 
