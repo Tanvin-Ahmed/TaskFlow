@@ -1,7 +1,7 @@
 import { sessionMiddleware } from "@/lib/session-middleware";
 import { Hono } from "hono";
 import { getAbsolutePath, PLANS } from "../libs/utils";
-import { getUserSubscriptionPlan, stripe } from "../libs/stripe";
+import { getUserSubscriptionPlan, stripe } from "./stripe";
 import { UserPaymentStatus } from "../types";
 import { DATABASE_ID, USER_PAYMENT_STATUS_ID } from "@/config";
 import { Query } from "node-appwrite";
@@ -22,7 +22,7 @@ const app = new Hono().post("/", sessionMiddleware, async (c) => {
 
   const billingUrl = getAbsolutePath("/pricing");
 
-  const subscriptionPlan = await getUserSubscriptionPlan(dbUser);
+  const subscriptionPlan = await getUserSubscriptionPlan();
 
   if (subscriptionPlan.isSubscribed && dbUser.documents[0].stripeCustomerId) {
     const stripeSession = await stripe.billingPortal.sessions.create({

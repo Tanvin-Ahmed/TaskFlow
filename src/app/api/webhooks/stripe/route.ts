@@ -1,7 +1,7 @@
 import { DATABASE_ID, USER_PAYMENT_STATUS_ID } from "@/config";
-import { stripe } from "@/features/pricing/libs/stripe";
+import { stripe } from "@/features/pricing/server/stripe";
 import { PaymentStatus } from "@/features/pricing/types";
-import { createAdminClient } from "@/lib/appwrite";
+import { createSessionClient } from "@/lib/appwrite";
 import { headers } from "next/headers";
 import { Query } from "node-appwrite";
 import type Stripe from "stripe";
@@ -11,7 +11,8 @@ export async function POST(request: Request) {
   const signature = headers().get("Stripe-Signature") ?? "";
 
   // initialize database
-  const { databases } = await createAdminClient();
+  const { databases } = await createSessionClient();
+  if (!databases) return;
 
   let event: Stripe.Event;
 

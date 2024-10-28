@@ -1,17 +1,17 @@
 import Stripe from "stripe";
-import { PLANS } from "./utils";
+import { PLANS } from "../libs/utils";
 import { getCurrent } from "@/features/auth/server/queries";
-import { Models } from "node-appwrite";
+import { Query } from "node-appwrite";
 import { UserPaymentStatus } from "../types";
+import { createSessionClient } from "@/lib/appwrite";
+import { DATABASE_ID, USER_PAYMENT_STATUS_ID } from "@/config";
 
 export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY ?? "", {
   apiVersion: "2024-09-30.acacia",
   typescript: true,
 });
 
-export async function getUserSubscriptionPlan(
-  dbUser: Models.DocumentList<UserPaymentStatus>,
-) {
+export async function getUserSubscriptionPlan() {
   const user = await getCurrent();
 
   if (!user?.$id) {
@@ -22,6 +22,13 @@ export async function getUserSubscriptionPlan(
       stripeCurrentPeriodEnd: null,
     };
   }
+
+  const { databases } = await createSessionClient();
+  const dbUser = await databases.listDocuments<UserPaymentStatus>(
+    DATABASE_ID,
+    USER_PAYMENT_STATUS_ID,
+    [Query.equal("userId", user.$id)],
+  );
 
   if (!dbUser.total) {
     return {
