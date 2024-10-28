@@ -42,6 +42,7 @@ const app = new Hono().post("/", sessionMiddleware, async (c) => {
     payment_method_types: ["card", "paypal"],
     mode: "subscription",
     billing_address_collection: "auto",
+    customer_email: user.email,
     line_items: [
       {
         price: PLANS.find((plan) => plan.name === "Pro")?.price.priceIds.test,
