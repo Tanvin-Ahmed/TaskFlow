@@ -18,6 +18,7 @@ const app = new Hono().post("/stripe", async (c) => {
       process.env.STRIPE_WEBHOOK_SECRET || "",
     );
   } catch (err) {
+    console.log(err);
     return c.text(
       `Webhook Error: ${err instanceof Error ? err.message : "Unknown Error"}`,
       400,
