@@ -27,14 +27,14 @@ const app = new Hono().post("/", sessionMiddleware, async (c) => {
   if (subscriptionPlan.isSubscribed && dbUser.documents[0].stripeCustomerId) {
     const stripeSession = await stripe.billingPortal.sessions.create({
       customer: dbUser.documents[0].stripeCustomerId,
-      return_url: billingUrl,
+      return_url: "/dashboard",
     });
 
     return c.json({ url: stripeSession.url });
   }
 
   const stripeSession = await stripe.checkout.sessions.create({
-    success_url: billingUrl,
+    success_url: "/dashboard",
     cancel_url: billingUrl,
     payment_method_types: ["card", "paypal"],
     mode: "subscription",
