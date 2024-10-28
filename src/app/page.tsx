@@ -3,8 +3,11 @@ import HeroText from "@/components/custom/home/hero-text";
 import BgGrid from "@/components/custom/shared/bg-grid";
 import Footer from "@/components/custom/shared/footer";
 import Navbar from "@/components/custom/shared/navbar";
+import { createUserPaymentStatusInBD } from "@/features/auth/server/queries";
 
-export default function Home() {
+export default async function Home() {
+  await createUserPaymentStatusInBD();
+
   return (
     <>
       <Navbar />

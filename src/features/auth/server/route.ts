@@ -6,6 +6,8 @@ import { ID } from "node-appwrite";
 import { deleteCookie, setCookie } from "hono/cookie";
 import { AUTH_COOKIE } from "../constant";
 import { sessionMiddleware } from "@/lib/session-middleware";
+import { DATABASE_ID, USER_PAYMENT_STATUS_ID } from "@/config";
+import { PaymentStatus } from "@/features/pricing/types";
 
 const app = new Hono()
   .get("/current", sessionMiddleware, async (c) => {
@@ -30,8 +32,20 @@ const app = new Hono()
   .post("/sign-up", zValidator("json", signUpSchema), async (c) => {
     const { name, email, password } = c.req.valid("json");
 
-    const { account } = await createAdminClient();
-    await account.create(ID.unique(), email, password, name);
+    const { account, databases } = await createAdminClient();
+    const authData = await account.create(ID.unique(), email, password, name);
+
+    await databases.createDocument(
+      DATABASE_ID,
+      USER_PAYMENT_STATUS_ID,
+      ID.unique(),
+      {
+        userId: authData.$id,
+        paymentStatus: PaymentStatus.Normal,
+      },
+    );
+
+    // create payment user info
 
     const session = await account.createEmailPasswordSession(email, password);
 

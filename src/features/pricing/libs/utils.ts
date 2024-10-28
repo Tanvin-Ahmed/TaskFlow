@@ -1,9 +1,15 @@
+export const getAbsolutePath = (path: string) => {
+  if (typeof window !== "undefined") return path;
+  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}${path}`;
+  return `http://localhost:${process.env.PORT ?? 3000}${path}`;
+};
+
 export const PLANS = [
   {
     name: "Free",
     slug: "free",
-    quota: 10,
-    pagesPerPdf: 20,
+    userPerWorkspace: 5,
+    projectPerWorkspace: 10,
     price: {
       amount: 0,
       priceIds: {
@@ -15,8 +21,8 @@ export const PLANS = [
   {
     name: "Pro",
     slug: "pro",
-    quota: 100,
-    pagesPerPdf: 100,
+    userPerWorkspace: Infinity,
+    projectPerWorkspace: Infinity,
     price: {
       amount: 14,
       priceIds: {
@@ -31,7 +37,6 @@ export const pricingItems = [
   {
     plan: "Free",
     tagline: "For small side projects.",
-    quota: 10,
     features: [
       {
         text: "10 pages per PDF",
@@ -58,7 +63,6 @@ export const pricingItems = [
   {
     plan: "Pro",
     tagline: "For larger projects with higher needs.",
-    quota: PLANS.find((p) => p.slug === "pro")!.quota,
     features: [
       {
         text: "100 pages per PDF",
