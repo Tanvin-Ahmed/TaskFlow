@@ -34,14 +34,17 @@ const Pricing = async () => {
             return (
               <div
                 key={item.plan}
-                className={cn("relative rounded-2xl bg-white shadow-lg", {
-                  "border-2 border-blue-600 shadow-blue-200":
-                    item.plan === "Pro",
-                  "border border-gray-200": item.plan !== "Pro",
-                })}
+                className={cn(
+                  "relative rounded-2xl bg-white shadow-lg dark:bg-purple-900/20",
+                  {
+                    "border-2 border-purple-600 shadow-purple-200":
+                      item.plan === "Pro",
+                    "border border-gray-200": item.plan !== "Pro",
+                  },
+                )}
               >
                 {item.plan === "Pro" && (
-                  <div className="absolute -top-5 left-0 right-0 mx-auto w-32 rounded-full bg-gradient-to-r from-blue-600 to-cyan-600 px-3 py-2 text-sm font-medium text-white">
+                  <div className="absolute -top-5 left-0 right-0 mx-auto w-32 rounded-full bg-gradient-to-r from-purple-600 to-cyan-600 px-3 py-2 text-sm font-medium text-white">
                     Upgrade now
                   </div>
                 )}
@@ -56,7 +59,7 @@ const Pricing = async () => {
                   <p className="text-gray-500">per month</p>
                 </div>
 
-                <div className="flex h-20 items-center justify-center border-b border-t border-gray-200 bg-gray-50">
+                <div className="flex h-20 items-center justify-center border-b border-t border-gray-200 bg-gray-50 dark:bg-purple-900/40">
                   <div className="flex items-center space-x-1">
                     <p> PDF/mo included</p>
                     <Tooltip delayDuration={300}>
