@@ -1,16 +1,19 @@
 import { DATABASE_ID, USER_PAYMENT_STATUS_ID } from "@/config";
 import { stripe } from "@/features/pricing/server/stripe";
 import { PaymentStatus } from "@/features/pricing/types";
-import { createAdminClient } from "@/lib/appwrite";
 import { Hono } from "hono";
-import { Query } from "node-appwrite";
+import { Client, Databases, Query } from "node-appwrite";
 import Stripe from "stripe";
 
 const app = new Hono().post("/stripe", async (c) => {
   const body = await c.req.text();
   const signature = c.req.header("Stripe-Signature") ?? "";
 
-  const { databases } = await createAdminClient();
+  const client = new Client()
+    .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT!)
+    .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT!);
+
+  const databases = new Databases(client);
 
   let event;
 
@@ -21,7 +24,6 @@ const app = new Hono().post("/stripe", async (c) => {
       process.env.STRIPE_WEBHOOK_SECRET || "",
     );
   } catch (err) {
-    console.log(err);
     return c.text(
       `Webhook Error: ${err instanceof Error ? err.message : "Unknown Error"}`,
       400,
