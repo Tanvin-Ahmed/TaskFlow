@@ -7,7 +7,7 @@ import { Query } from "node-appwrite";
 import Stripe from "stripe";
 
 const app = new Hono().post("/stripe", async (c) => {
-  const body = await c.req.text();
+  const body = await c.req.json();
   const signature = c.req.header("stripe-signature") ?? "";
 
   const { databases } = await createAdminClient();
