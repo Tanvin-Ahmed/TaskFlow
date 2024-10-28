@@ -18,7 +18,7 @@ const routes = app
   .route("/projects", projects)
   .route("/tasks", tasks)
   .route("/pricing", pricing)
-  .route("/webhooks", webhooks);
+  .route("/webhook", webhooks);
 
 export const GET = handle(app);
 export const POST = handle(app);

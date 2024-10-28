@@ -6,9 +6,9 @@ import { Hono } from "hono";
 import { Query } from "node-appwrite";
 import Stripe from "stripe";
 
-const app = new Hono().post("/stripe", sessionMiddleware, async (c) => {
+const app = new Hono().post("/", sessionMiddleware, async (c) => {
   const body = await c.req.text();
-  const signature = c.req.header("Stripe-Signature") ?? "";
+  const signature = c.req.header("stripe-signature") ?? "";
 
   const databases = c.get("databases");
 
