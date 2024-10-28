@@ -8,16 +8,16 @@ import tasks from "@/features/tasks/server/route";
 import pricing from "@/features/pricing/server/route";
 import webhooks from "@/features/webhooks/server/route";
 
-const app = new Hono();
+const app = new Hono().basePath("/api");
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const routes = app
-  .route("/api/auth", auth)
-  .route("/api/workspaces", workspaces)
-  .route("/api/members", members)
-  .route("/api/projects", projects)
-  .route("/api/tasks", tasks)
-  .route("/api/pricing", pricing)
+  .route("/auth", auth)
+  .route("/workspaces", workspaces)
+  .route("/members", members)
+  .route("/projects", projects)
+  .route("/tasks", tasks)
+  .route("/pricing", pricing)
   .route("/webhook", webhooks);
 
 export const GET = handle(app);
