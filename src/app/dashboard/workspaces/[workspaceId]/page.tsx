@@ -3,10 +3,10 @@ import { redirect } from "next/navigation";
 import WorkspaceIdClient from "./client";
 
 const WorkspacePage = async () => {
-  const user = getCurrent();
+  const user = await getCurrent();
   if (!user) redirect("/sign-in");
 
-  return <WorkspaceIdClient />;
+  return <WorkspaceIdClient user={user} />;
 };
 
 export default WorkspacePage;

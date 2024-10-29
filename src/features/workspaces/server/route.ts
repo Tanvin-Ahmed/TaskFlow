@@ -8,6 +8,7 @@ import {
   MEMBERS_ID,
   PROJECTS_ID,
   TASKS_ID,
+  USER_PAYMENT_STATUS_ID,
   WORKSPACES_ID,
 } from "@/config";
 import { ID, Query } from "node-appwrite";
@@ -19,6 +20,8 @@ import { Workspace } from "../types";
 import { endOfMonth, startOfMonth, subMonths } from "date-fns";
 import { Task, TaskStatus } from "@/features/tasks/types";
 import { Project } from "@/features/projects/types";
+import { PaymentStatus, UserPaymentStatus } from "@/features/pricing/types";
+import { DEFAULT_VALUES } from "@/constant/values";
 
 const app = new Hono()
   .get("/", sessionMiddleware, async (c) => {
@@ -232,6 +235,27 @@ const app = new Hono()
       },
     });
   })
+  .get("/:workspaceId/isAdmin", sessionMiddleware, async (c) => {
+    const { workspaceId } = c.req.param();
+    const databases = c.get("databases");
+    const user = c.get("user");
+
+    const member = await getMember({
+      databases,
+      workspaceId,
+      userId: user.$id,
+    });
+
+    if (!member) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
+
+    if (member.role === MemberRole.ADMIN) {
+      return c.json({ isAdmin: true });
+    } else {
+      return c.json({ isAdmin: false });
+    }
+  })
   .post(
     "/",
     zValidator("form", workspaceSchema),
@@ -340,11 +364,45 @@ const app = new Hono()
         return c.json({ error: "Invalid invite code" }, 400);
       }
 
-      await databases.createDocument(DATABASE_ID, MEMBERS_ID, ID.unique(), {
-        workspaceId,
-        userId: user.$id,
-        role: MemberRole.MEMBER,
-      });
+      // check if the creator of workspace is pro or normal user
+      const creatorInfo = await databases.listDocuments<UserPaymentStatus>(
+        DATABASE_ID,
+        USER_PAYMENT_STATUS_ID,
+        [Query.equal("userId", workspace.userId)],
+      );
+      const creator = creatorInfo.documents[0];
+
+      // if creator is pro then join the member
+      if (creator.paymentStatus === PaymentStatus.Pro) {
+        await databases.createDocument(DATABASE_ID, MEMBERS_ID, ID.unique(), {
+          workspaceId,
+          userId: user.$id,
+          role: MemberRole.MEMBER,
+        });
+      }
+
+      // if creator is normal user then check the member limitation then join or reject the member
+      if (creator.paymentStatus === PaymentStatus.Normal) {
+        const membersInWorkspace =
+          await databases.listDocuments<UserPaymentStatus>(
+            DATABASE_ID,
+            MEMBERS_ID,
+            [Query.equal("workspaceId", workspaceId)],
+          );
+
+        if (
+          membersInWorkspace.total >=
+          DEFAULT_VALUES.FREE_VERSION_MEMBER_COUNT_PER_WORKSPACE
+        ) {
+          return c.json({ error: "User limit exceeded" }, 400);
+        }
+
+        await databases.createDocument(DATABASE_ID, MEMBERS_ID, ID.unique(), {
+          workspaceId,
+          userId: user.$id,
+          role: MemberRole.MEMBER,
+        });
+      }
 
       return c.json({ data: workspace });
     },

@@ -4,6 +4,7 @@ import { ThemeToggle } from "../../shared/theme-button";
 import UserButton from "@/features/auth/components/user-button";
 import { usePathname } from "next/navigation";
 import MobileSidebar from "../../shared/sidebar/mobile-sidebar";
+import { Models } from "node-appwrite";
 
 const pageNameMap = {
   tasks: {
@@ -21,7 +22,11 @@ const defaultMap = {
   description: "Monitor all of your projects and tasks here.",
 };
 
-const DashboardNavbar = () => {
+interface Props {
+  user: Models.User<Models.Preferences>;
+}
+
+const DashboardNavbar = ({ user }: Props) => {
   const pathname = usePathname();
   const pathnameParts = pathname.split("/");
   const pathnameKey = pathnameParts[4] as keyof typeof pageNameMap;
@@ -35,7 +40,7 @@ const DashboardNavbar = () => {
           "container mx-auto flex items-center justify-between p-2",
         )}
       >
-        <MobileSidebar />
+        <MobileSidebar user={user} />
         <div className="hidden flex-col lg:flex">
           <h1 className="text-2xl font-bold">{title}</h1>
           <p className="text-muted-foreground">{description}</p>

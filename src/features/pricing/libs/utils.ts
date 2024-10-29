@@ -1,3 +1,5 @@
+import { DEFAULT_VALUES } from "@/constant/values";
+
 export const getAbsolutePath = (path: string) => {
   if (typeof window !== "undefined") return path;
   if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}${path}`;
@@ -8,8 +10,8 @@ export const PLANS = [
   {
     name: "Free",
     slug: "free",
-    userPerWorkspace: 5,
-    projectPerWorkspace: 10,
+    userPerWorkspace: DEFAULT_VALUES.FREE_VERSION_PROJECT_COUNT_PER_WORKSPACE,
+    projectPerWorkspace: DEFAULT_VALUES.FREE_VERSION_MEMBER_COUNT_PER_WORKSPACE,
     price: {
       amount: 0,
       priceIds: {
@@ -39,19 +41,23 @@ export const pricingItems = [
     tagline: "For small side projects.",
     features: [
       {
-        text: "10 pages per PDF",
-        footnote: "The maximum amount of pages per PDF-file.",
+        text: "5 project per workspace",
+        footnote: "The maximum amount of project per workspace.",
       },
       {
-        text: "4MB file size limit",
-        footnote: "The maximum file size of a single PDF file.",
+        text: "10 members per project",
+        footnote: "The maximum amount of team member per project.",
+      },
+      {
+        text: "1GB storage limit",
+        footnote: "The maximum cloud storage.",
       },
       {
         text: "Mobile-friendly interface",
       },
       {
         text: "Higher-quality responses",
-        footnote: "Better algorithmic responses for enhanced content quality",
+        footnote: "Better algorithmic responses for enhanced work experience",
         negative: true,
       },
       {
@@ -65,12 +71,16 @@ export const pricingItems = [
     tagline: "For larger projects with higher needs.",
     features: [
       {
-        text: "100 pages per PDF",
-        footnote: "The maximum amount of pages per PDF-file.",
+        text: "Unlimited projects per workspace",
+        footnote: "The maximum amount of project per workspace.",
       },
       {
-        text: "16MB file size limit",
-        footnote: "The maximum file size of a single PDF file.",
+        text: "Unlimited members per project",
+        footnote: "The maximum amount of team member per project.",
+      },
+      {
+        text: "10GB storage limit",
+        footnote: "The maximum cloud storage.",
       },
       {
         text: "Mobile-friendly interface",

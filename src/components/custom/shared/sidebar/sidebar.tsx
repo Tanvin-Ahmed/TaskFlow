@@ -5,8 +5,13 @@ import Navigation from "./navigation";
 import WorkspaceSwitcher from "./workspace-switcher";
 import Projects from "./projects";
 import ProjectProgress from "./project-progress";
+import { Models } from "node-appwrite";
 
-const Sidebar = () => {
+interface Props {
+  user: Models.User<Models.Preferences>;
+}
+
+const Sidebar = ({ user }: Props) => {
   return (
     <aside className="h-full w-full overflow-y-auto bg-neutral-100 p-4 dark:bg-indigo-900/20 dark:backdrop-blur-sm">
       <Link href={"/"} className="flex items-center gap-2">
@@ -20,9 +25,9 @@ const Sidebar = () => {
       <DottedSeparator className="my-4" />
       <Navigation />
       <DottedSeparator className="my-4" />
-      <Projects />
+      <Projects user={user} />
       <DottedSeparator className="my-4" />
-      <ProjectProgress />
+      <ProjectProgress user={user} />
     </aside>
   );
 };

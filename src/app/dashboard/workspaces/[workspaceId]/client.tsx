@@ -10,8 +10,13 @@ import MemberList from "@/features/workspaces/components/member-list";
 import ProjectList from "@/features/workspaces/components/project-list";
 import TaskList from "@/features/workspaces/components/task-list";
 import useWorkspaceId from "@/features/workspaces/hooks/use-workspace-id";
+import { Models } from "node-appwrite";
 
-const WorkspaceIdClient = () => {
+interface Props {
+  user: Models.User<Models.Preferences>;
+}
+
+const WorkspaceIdClient = ({ user }: Props) => {
   const workspaceId = useWorkspaceId();
   const { data: analytics, isLoading: isLoadingAnalytics } =
     useGetWorkspaceAnalytics({ workspaceId });
@@ -46,7 +51,11 @@ const WorkspaceIdClient = () => {
       <Analytics data={analytics} />
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <TaskList data={tasks.documents} total={tasks.total} />
-        <ProjectList data={projects.documents} total={projects.total} />
+        <ProjectList
+          data={projects.documents}
+          total={projects.total}
+          user={user}
+        />
         <MemberList data={members.documents} total={members.total} />
       </div>
     </div>

@@ -6,8 +6,13 @@ import { MenuIcon } from "lucide-react";
 import Sidebar from "./sidebar";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
+import { Models } from "node-appwrite";
 
-const MobileSidebar = () => {
+interface Props {
+  user: Models.User<Models.Preferences>;
+}
+
+const MobileSidebar = ({ user }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
 
@@ -23,7 +28,7 @@ const MobileSidebar = () => {
         </Button>
       </SheetTrigger>
       <SheetContent side="left" className="p-0">
-        <Sidebar />
+        <Sidebar user={user} />
       </SheetContent>
     </Sheet>
   );

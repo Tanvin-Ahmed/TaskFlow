@@ -37,7 +37,7 @@ const Pricing = async () => {
                 className={cn(
                   "relative rounded-2xl bg-white shadow-lg dark:bg-purple-900/20",
                   {
-                    "border-2 border-purple-600 shadow-purple-200":
+                    "border-2 border-purple-600 shadow-purple-200 dark:shadow-purple-600":
                       item.plan === "Pro",
                     "border border-gray-200": item.plan !== "Pro",
                   },
@@ -59,15 +59,20 @@ const Pricing = async () => {
                   <p className="text-gray-500">per month</p>
                 </div>
 
-                <div className="flex h-20 items-center justify-center border-b border-t border-gray-200 bg-gray-50 dark:bg-purple-900/40">
+                <div className="flex h-20 items-center justify-center border-b border-t border-gray-200 bg-gray-50 dark:border-purple-600 dark:bg-purple-900/40">
                   <div className="flex items-center space-x-1">
-                    <p> PDF/mo included</p>
+                    <p>
+                      {" "}
+                      {item.plan === "Pro" ? "Unlimited" : "5"} projects &{" "}
+                      {item.plan === "Pro" ? "Unlimited" : "10"} members/mo
+                      included
+                    </p>
                     <Tooltip delayDuration={300}>
                       <TooltipTrigger className="ml-1.5 cursor-default">
                         <HelpCircle className="h-4 w-4 text-zinc-500" />
                       </TooltipTrigger>
                       <TooltipContent className="w-80 p-2">
-                        How many PDFs you upload per month.
+                        Project and member limits.
                       </TooltipContent>
                     </Tooltip>
                   </div>

@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { DEFAULT_VALUES } from "@/constant/values";
+import { useGetSubscription } from "@/features/pricing/api/use-get-subscription";
 import useGetProjects from "@/features/projects/api/use-get-projects";
 import ProjectAvatar from "@/features/projects/components/project-avatar";
 import useCreateProjectModal from "@/features/projects/hooks/use-create-project-modal";
@@ -10,16 +11,20 @@ import { cn } from "@/lib/utils";
 import { Loader } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Models } from "node-appwrite";
 import { RiAddCircleFill } from "react-icons/ri";
 
-const Projects = () => {
+interface Props {
+  user: Models.User<Models.Preferences>;
+}
+
+const Projects = ({ user }: Props) => {
   const pathname = usePathname();
   const workspaceId = useWorkspaceId();
   const { open } = useCreateProjectModal();
   const { data, isLoading } = useGetProjects({ workspaceId });
-
-  // TODO: if user is pro then user can create unlimited projects otherwise only 5 projects can be created per workspace
-  const isProUser = false;
+  const { data: subscription, isLoading: isLoadingSubscription } =
+    useGetSubscription({ userId: user.$id });
 
   return (
     <div className="flex flex-col gap-y-2">
@@ -30,19 +35,25 @@ const Projects = () => {
         <Button
           size={"icon"}
           className="m-0 size-5 rounded-full p-0"
+          variant={"ghost"}
           disabled={
-            isProUser
+            isLoadingSubscription ||
+            (subscription && subscription.isSubscribed
               ? false
               : data
                 ? data.total >=
                   DEFAULT_VALUES.FREE_VERSION_PROJECT_COUNT_PER_WORKSPACE
-                : false
+                : false)
           }
         >
-          <RiAddCircleFill
-            onClick={open}
-            className="size-5 cursor-pointer text-neutral-500 transition hover:opacity-75 dark:text-neutral-50"
-          />
+          {isLoadingSubscription ? (
+            <Loader className="size-4 animate-spin text-muted-foreground" />
+          ) : (
+            <RiAddCircleFill
+              onClick={open}
+              className="size-5 cursor-pointer text-neutral-500 transition hover:opacity-75 dark:text-neutral-50"
+            />
+          )}
         </Button>
       </div>
       {isLoading ? (

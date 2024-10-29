@@ -4,9 +4,10 @@ import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { z } from "zod";
 import { getMember } from "../utils";
-import { DATABASE_ID, MEMBERS_ID } from "@/config";
+import { DATABASE_ID, MEMBERS_ID, WORKSPACES_ID } from "@/config";
 import { Query } from "node-appwrite";
 import { Member, MemberRole } from "../types";
+import { Workspace } from "@/features/workspaces/types";
 
 const app = new Hono()
   .get(
@@ -92,6 +93,16 @@ const app = new Hono()
       return c.json({ error: "Cannot delete the only member" }, 400);
     }
 
+    // check is the member is creator of the workspace
+    const workspace = await databases.getDocument<Workspace>(
+      DATABASE_ID,
+      WORKSPACES_ID,
+      memberToDelete.workspaceId,
+    );
+    if (workspace.userId === memberId) {
+      return c.json({ error: "Cannot delete the creator of workspace" }, 400);
+    }
+
     //   finally delete the member
     await databases.deleteDocument(DATABASE_ID, MEMBERS_ID, memberId);
 
@@ -141,6 +152,19 @@ const app = new Hono()
 
       if (allMembersInWorkspace.total === 1) {
         return c.json({ error: "Cannot downgrade the only member" }, 400);
+      }
+
+      // check is the member is creator of the workspace
+      const workspace = await databases.getDocument<Workspace>(
+        DATABASE_ID,
+        WORKSPACES_ID,
+        memberToUpdate.workspaceId,
+      );
+      if (workspace.userId === memberId) {
+        return c.json(
+          { error: "Cannot downgrade the creator of workspace" },
+          400,
+        );
       }
 
       // finally update
