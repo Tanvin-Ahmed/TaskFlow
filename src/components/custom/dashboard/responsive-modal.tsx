@@ -10,7 +10,7 @@ interface Props {
 }
 
 const ResponsiveModal = ({ children, onOpenChange, open }: Props) => {
-  const isDesktop = useMedia("(min-width: 1024px)", true);
+  const isDesktop = useMedia("(min-width: 768px)", true);
 
   if (isDesktop) {
     return (

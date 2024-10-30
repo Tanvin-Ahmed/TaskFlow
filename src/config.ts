@@ -8,3 +8,6 @@ export const IMAGES_BUCKET_ID =
 
 export const USER_PAYMENT_STATUS_ID =
   process.env.NEXT_PUBLIC_APPWRITE_USER_PAYMENT_STATUS_ID!;
+
+// stream api
+export const STREAM_API_KEY = process.env.NEXT_PUBLIC_STREAM_API_KEY!;

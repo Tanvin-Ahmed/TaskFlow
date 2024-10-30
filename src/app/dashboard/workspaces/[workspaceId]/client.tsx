@@ -6,6 +6,7 @@ import { useGetMembers } from "@/features/members/api/use-get-members";
 import useGetProjects from "@/features/projects/api/use-get-projects";
 import useGetTasks from "@/features/tasks/api/use-get-tasks";
 import useGetWorkspaceAnalytics from "@/features/workspaces/api/use-get-workspace-analytics";
+import MeetingButton from "@/features/workspaces/components/meeting-button";
 import MemberList from "@/features/workspaces/components/member-list";
 import ProjectList from "@/features/workspaces/components/project-list";
 import TaskList from "@/features/workspaces/components/task-list";
@@ -49,6 +50,7 @@ const WorkspaceIdClient = ({ user }: Props) => {
   return (
     <div className="flex h-full flex-col space-y-4">
       <Analytics data={analytics} />
+      <MeetingButton />
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <TaskList data={tasks.documents} total={tasks.total} />
         <ProjectList
