@@ -19,7 +19,7 @@ const MeetingPage = async () => {
   return (
     <section className="flex size-full flex-col gap-10">
       <div className="h-[300px] w-full rounded-[20px] bg-hero bg-cover dark:bg-hero-dark">
-        <div className="mx-md:py-8 flex h-full flex-col justify-between py-5 max-md:px-5 lg:p-11">
+        <div className="mx-md:py-8 flex h-full flex-col justify-between px-5 py-5 lg:p-11">
           <h2 className="glassmorphism z-0 max-w-[270px] rounded py-2 text-center text-base font-normal">
             Upcoming Meeting at: 12:30 PM
           </h2>

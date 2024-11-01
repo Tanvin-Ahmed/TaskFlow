@@ -11,6 +11,9 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "Task Flow",
   description: "Streamline tasks, simplify projects",
+  icons: {
+    icon: "/assets/icons/logo.png",
+  },
 };
 
 export default function RootLayout({

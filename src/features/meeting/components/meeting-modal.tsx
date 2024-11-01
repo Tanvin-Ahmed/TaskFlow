@@ -30,7 +30,7 @@ const MeetingModal = ({
 }: Props) => {
   return (
     <ResponsiveModal open={isOpen} onOpenChange={onClose}>
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-6 p-5">
         {image ? (
           <div className="flex justify-center">
             <Image src={image} alt="image" width={72} height={72} />
