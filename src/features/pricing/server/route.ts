@@ -3,7 +3,7 @@ import { Hono } from "hono";
 import { PLANS } from "../libs/utils";
 import { getUserSubscriptionPlan, stripe } from "./stripe";
 import { PaymentStatus, UserPaymentStatus } from "../types";
-import { DATABASE_ID, USER_PAYMENT_STATUS_ID } from "@/config";
+import { BASE_URL, DATABASE_ID, USER_PAYMENT_STATUS_ID } from "@/config";
 import { Query } from "node-appwrite";
 
 const app = new Hono()
@@ -21,10 +21,7 @@ const app = new Hono()
       return c.json({ error: "Unauthorized" }, 401);
     }
 
-    const billingUrl =
-      process.env.NODE_ENV === "production"
-        ? "http://task-flow-brown.vercel.app/pricing"
-        : "http://localhost:3000/pricing";
+    const billingUrl = `${BASE_URL}/pricing`;
 
     const subscriptionPlan = await getUserSubscriptionPlan();
 

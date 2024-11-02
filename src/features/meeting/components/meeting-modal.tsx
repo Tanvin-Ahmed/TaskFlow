@@ -42,8 +42,9 @@ const MeetingModal = ({
         {children ?? null}
         <Button onClick={handleClick}>
           {buttonIcon ? (
-            <Image src={buttonIcon} alt="icon" width={13} height={13} />
+            <Image src={buttonIcon} alt="icon" width={14} height={14} />
           ) : null}{" "}
+          &nbsp;
           {buttonText || "Schedule Meeting"}
         </Button>
       </div>

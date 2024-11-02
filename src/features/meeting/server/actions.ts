@@ -25,3 +25,14 @@ export const tokenProvider = async () => {
 
   return token;
 };
+
+export const deleteCallById = async (id: string) => {
+  const user = await getCurrent();
+  if (!user) throw new Error("User not logged in");
+  if (!streamAPIKey) throw new Error("Stream API key not available");
+  if (!streamSecretKey) throw new Error("No API secret");
+
+  const client = new StreamClient(streamAPIKey, streamSecretKey);
+
+  await client.video.deleteCall({ id, type: "default" });
+};
