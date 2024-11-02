@@ -19,6 +19,8 @@ import ReactDatePicker from "react-datepicker";
 import { Input } from "@/components/ui/input";
 import { BASE_URL } from "@/config";
 import useWorkspaceId from "@/features/workspaces/hooks/use-workspace-id";
+import { useGetUserIsAdmin } from "@/features/workspaces/api/use-get-user-isAdmin";
+import PageLoader from "@/components/custom/shared/page-loader";
 
 const cardData = [
   {
@@ -74,6 +76,11 @@ const MeetingTypeList = ({ user }: Props) => {
   const router = useRouter();
   const pathname = usePathname();
 
+  const { data: isAdmin, isLoading: isLoadingIsAdmin } = useGetUserIsAdmin({
+    workspaceId,
+    userId: user.$id,
+  });
+
   const client = useStreamVideoClient();
 
   const [meetingState, setMeetingState] = useState<
@@ -127,22 +134,28 @@ const MeetingTypeList = ({ user }: Props) => {
     }
   };
 
+  if (isLoadingIsAdmin) return <PageLoader />;
+
   const meetingLink = `${BASE_URL}${pathname}/${callDetails?.id}`;
 
   return (
     <section className="grid grid-cols-1 gap-5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-      <HomeCard
-        {...cardData[0]}
-        handleClick={() => setMeetingState("isInstantMeeting")}
-      />
+      {isAdmin ? (
+        <HomeCard
+          {...cardData[0]}
+          handleClick={() => setMeetingState("isInstantMeeting")}
+        />
+      ) : null}
       <HomeCard
         {...cardData[1]}
         handleClick={() => setMeetingState("isJoiningMeeting")}
       />
-      <HomeCard
-        {...cardData[2]}
-        handleClick={() => setMeetingState("isScheduleMeeting")}
-      />
+      {isAdmin ? (
+        <HomeCard
+          {...cardData[2]}
+          handleClick={() => setMeetingState("isScheduleMeeting")}
+        />
+      ) : null}
       <HomeCard
         {...cardData[3]}
         handleClick={() => router.push(`${pathname}/upcoming`)}

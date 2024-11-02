@@ -13,7 +13,8 @@ const MeetingRoomClient = () => {
 
   const [isSetupComplete, setIsSetupComplete] = useState(false);
 
-  if (isCallLoading) return <PageLoader />;
+  if (isCallLoading)
+    return <PageLoader message="Redirecting to join meeting page" />;
 
   return (
     <main className="h-screen w-full">

@@ -50,7 +50,7 @@ const WorkspaceIdClient = ({ user }: Props) => {
   return (
     <div className="flex h-full flex-col space-y-4">
       <Analytics data={analytics} />
-      <MeetingButton />
+      <MeetingButton user={user} />
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <TaskList data={tasks.documents} total={tasks.total} />
         <ProjectList

@@ -52,6 +52,19 @@ const app = new Hono()
       return c.json({ data: { ...members, documents: populatedMembers } });
     },
   )
+  .get(":workspaceId", sessionMiddleware, async (c) => {
+    const databases = c.get("databases");
+    const user = c.get("user");
+    const { workspaceId } = c.req.param();
+
+    const member = await getMember({
+      databases,
+      workspaceId,
+      userId: user.$id,
+    });
+
+    return c.json({ data: !!member.$id });
+  })
   .delete("/:memberId", sessionMiddleware, async (c) => {
     const { memberId } = c.req.param();
     const user = c.get("user");
