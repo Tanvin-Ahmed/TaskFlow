@@ -5,14 +5,9 @@ import MeetingSetup from "@/features/meeting/components/meeting-setup";
 import { useGetCallById } from "@/features/meeting/hooks/use-get-call-by-id";
 import useMeetingId from "@/features/meeting/hooks/use-meeting-id";
 import { StreamCall, StreamTheme } from "@stream-io/video-react-sdk";
-import { Models } from "node-appwrite";
 import { useState } from "react";
 
-interface Props {
-  user: Models.User<Models.Preferences>;
-}
-
-const MeetingRoomClient = ({ user }: Props) => {
+const MeetingRoomClient = () => {
   const meetingId = useMeetingId();
   const { call, isCallLoading } = useGetCallById(meetingId);
 

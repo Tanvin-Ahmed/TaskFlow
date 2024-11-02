@@ -6,7 +6,7 @@ const MeetingRoomPage = async () => {
   const user = await getCurrent();
   if (!user) redirect("/sign-in");
 
-  return <MeetingRoomClient user={user} />;
+  return <MeetingRoomClient />;
 };
 
 export default MeetingRoomPage;
