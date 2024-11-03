@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { signInSchema, signUpSchema } from "@/features/auth/schema";
 import { createAdminClient } from "@/lib/appwrite";
-import { ID, Permission, Role } from "node-appwrite";
+import { ID, Permission, Query, Role } from "node-appwrite";
 import { deleteCookie, setCookie } from "hono/cookie";
 import { AUTH_COOKIE } from "../constant";
 import { sessionMiddleware } from "@/lib/session-middleware";
@@ -32,7 +32,13 @@ const app = new Hono()
   .post("/sign-up", zValidator("json", signUpSchema), async (c) => {
     const { name, email, password } = c.req.valid("json");
 
-    const { account, databases } = await createAdminClient();
+    const { account, databases, users } = await createAdminClient();
+
+    const existingUsers = await users.list([Query.equal("email", email)]);
+    if (existingUsers.total > 0) {
+      return c.json({ error: "User already exists with this email" }, 409);
+    }
+
     const authData = await account.create(ID.unique(), email, password, name);
 
     await databases.createDocument(

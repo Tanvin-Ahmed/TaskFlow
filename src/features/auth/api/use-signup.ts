@@ -19,7 +19,12 @@ export const useSignUp = () => {
     mutationFn: async ({ json }) => {
       const res = await client.api.auth["sign-up"]["$post"]({ json });
 
-      if (!res.ok) throw new Error("Failed to sign up");
+      if (!res.ok) {
+        const errorData = (await res.json()) as {
+          error: string;
+        };
+        throw new Error(errorData?.error || "Failed to join workspace");
+      }
 
       return await res.json();
     },
@@ -28,8 +33,8 @@ export const useSignUp = () => {
       router.refresh();
       queryClient.invalidateQueries({ queryKey: ["current"] });
     },
-    onError: () => {
-      toast.error("Something went wrong. Please try again!");
+    onError: (error: Error) => {
+      toast.error(error.message || "Something went wrong. Please try again!");
     },
   });
 
