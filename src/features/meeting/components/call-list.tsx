@@ -22,6 +22,7 @@ const CallList = ({ type, user }: Props) => {
   const router = useRouter();
   const { data, isLoading } = useGetCalls({
     workspaceId,
+    user,
   });
   const [recordings, setRecordings] = useState<CallRecording[]>();
 

@@ -1,16 +1,16 @@
-import { useCurrent } from "@/features/auth/api/use-current";
 import { Call, useStreamVideoClient } from "@stream-io/video-react-sdk";
 import { useQuery } from "@tanstack/react-query";
+import { Models } from "node-appwrite";
 
 interface Props {
   workspaceId: string;
+  user: Models.User<Models.Preferences>;
 }
 
-const useGetCalls = ({ workspaceId }: Props) => {
+const useGetCalls = ({ workspaceId, user }: Props) => {
   // const [calls, setCalls] = useState<Call[]>();
   // const [isLoading, setIsLoading] = useState(false);
 
-  const { data: user } = useCurrent();
   const client = useStreamVideoClient();
 
   const query = useQuery({

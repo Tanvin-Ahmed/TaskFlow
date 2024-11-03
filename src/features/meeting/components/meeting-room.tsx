@@ -19,14 +19,17 @@ import {
   useCallStateHooks,
 } from "@stream-io/video-react-sdk";
 import { LayoutList, UsersIcon } from "lucide-react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import EndCallButton from "./end-call-button";
 import PageLoader from "@/components/custom/shared/page-loader";
+import useWorkspaceId from "@/features/workspaces/hooks/use-workspace-id";
 
 type CallLayoutType = "grid" | "speaker-left" | "speaker-right";
 
 const MeetingRoom = () => {
+  const router = useRouter();
+  const workspaceId = useWorkspaceId();
   const searchParams = useSearchParams();
   const isPersonalRoom = !!searchParams.get("personal");
 
@@ -97,7 +100,11 @@ const MeetingRoom = () => {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <CallControls />
+        <CallControls
+          onLeave={() => {
+            router.push(`/workspaces/${workspaceId}/meeting`);
+          }}
+        />
         <CallStatsButton />
 
         <Button
