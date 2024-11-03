@@ -2,6 +2,7 @@ import { toast } from "sonner";
 import { client } from "@/lib/rpc";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { InferRequestType, InferResponseType } from "hono";
+import useWorkspaceId from "@/features/workspaces/hooks/use-workspace-id";
 
 type ResponseType = InferResponseType<
   (typeof client.api.members)[":memberId"]["$patch"],
@@ -13,6 +14,7 @@ type RequestType = InferRequestType<
 
 export const useUpdateMember = () => {
   const queryClient = useQueryClient();
+  const workspaceId = useWorkspaceId();
 
   const mutation = useMutation<ResponseType, Error, RequestType>({
     mutationFn: async ({ param, json }) => {
@@ -31,8 +33,7 @@ export const useUpdateMember = () => {
       return await res.json();
     },
     onSuccess: () => {
-      toast.success("Member updated successfully!");
-      queryClient.invalidateQueries({ queryKey: ["members"] });
+      queryClient.invalidateQueries({ queryKey: ["members", workspaceId] });
     },
     onError: (error: Error) => {
       toast.error(error.message || "Failed to update member");

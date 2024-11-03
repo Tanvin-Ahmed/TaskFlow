@@ -2,6 +2,7 @@ import { toast } from "sonner";
 import { client } from "@/lib/rpc";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { InferRequestType, InferResponseType } from "hono";
+import useWorkspaceId from "@/features/workspaces/hooks/use-workspace-id";
 
 type ResponseType = InferResponseType<
   (typeof client.api.members)[":memberId"]["$delete"],
@@ -13,6 +14,7 @@ type RequestType = InferRequestType<
 
 export const useDeleteMember = () => {
   const queryClient = useQueryClient();
+  const workspaceId = useWorkspaceId();
 
   const mutation = useMutation<ResponseType, Error, RequestType>({
     mutationFn: async ({ param }) => {
@@ -31,7 +33,7 @@ export const useDeleteMember = () => {
     },
     onSuccess: () => {
       toast.success("Member deleted successfully!");
-      queryClient.invalidateQueries({ queryKey: ["members"] });
+      queryClient.invalidateQueries({ queryKey: ["members", workspaceId] });
     },
     onError: (error: Error) => {
       toast.error(error.message || "Failed to delete member");

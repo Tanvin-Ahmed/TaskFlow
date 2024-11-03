@@ -132,7 +132,7 @@ const app = new Hono()
       const databases = c.get("databases");
 
       //   check is the member is in database or not
-      const memberToUpdate = await databases.getDocument(
+      const memberToUpdate = await databases.getDocument<Member>(
         DATABASE_ID,
         MEMBERS_ID,
         memberId,
@@ -173,7 +173,7 @@ const app = new Hono()
         WORKSPACES_ID,
         memberToUpdate.workspaceId,
       );
-      if (workspace.userId === memberId) {
+      if (workspace.userId === memberToUpdate.userId) {
         return c.json(
           { error: "Cannot downgrade the owner of workspace" },
           400,

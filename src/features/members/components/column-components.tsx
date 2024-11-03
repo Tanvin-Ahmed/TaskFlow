@@ -33,12 +33,14 @@ export const AdminSwitcher = ({ data }: { data: Row<Member> }) => {
 
     mutate(
       {
-        json: { role: isAdmin ? MemberRole.ADMIN : MemberRole.MEMBER },
+        json: { role: value ? MemberRole.ADMIN : MemberRole.MEMBER },
         param: { memberId },
       },
       {
         onSuccess: () => {
-          toast.success(`${memberName} is now an admin.`);
+          toast.success(
+            `${memberName} is now ${value ? "an admin" : "a member"} of this workspace.`,
+          );
         },
         onError: () => {
           setIsAdmin(role === MemberRole.ADMIN);
@@ -49,7 +51,10 @@ export const AdminSwitcher = ({ data }: { data: Row<Member> }) => {
 
   return (
     <div className="flex items-center justify-center">
-      <Switch checked={isAdmin} onCheckedChange={handleCheckedChange} />
+      <Switch
+        checked={isAdmin}
+        onCheckedChange={(e) => handleCheckedChange(e)}
+      />
     </div>
   );
 };
