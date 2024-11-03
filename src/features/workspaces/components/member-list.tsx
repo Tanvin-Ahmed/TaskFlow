@@ -8,7 +8,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useTheme } from "next-themes";
 import { Member } from "@/features/members/types";
 import MemberAvatar from "@/features/members/components/member-avatar";
-import { DEFAULT_VALUES } from "@/constant/values";
 
 interface Props {
   data: Member[];
@@ -19,9 +18,6 @@ const MemberList = ({ data, total }: Props) => {
   const { resolvedTheme } = useTheme();
   const workspaceId = useWorkspaceId();
 
-  // TODO: if user is pro then add unlimited members to workspace otherwise only 10 members
-  const isProUser = false;
-
   return (
     <div className="col-span-1 flex flex-col gap-y-4">
       <div className="rounded-lg border p-4">
@@ -31,14 +27,8 @@ const MemberList = ({ data, total }: Props) => {
             variant={resolvedTheme === "dark" ? "outline" : "muted"}
             size={"icon"}
             asChild
-            disabled={
-              isProUser
-                ? false
-                : total >=
-                  DEFAULT_VALUES.FREE_VERSION_MEMBER_COUNT_PER_WORKSPACE
-            }
           >
-            <Link href={`/workspaces/${workspaceId}/members`}>
+            <Link href={`/workspaces/${workspaceId}/settings`}>
               <SettingsIcon className="size-4 text-neutral-400" />
             </Link>
           </Button>
@@ -74,9 +64,7 @@ const MemberList = ({ data, total }: Props) => {
           className="mt-4 w-full"
           asChild
         >
-          <Link href={`/dashboard/workspaces/${workspaceId}/projects`}>
-            Show All
-          </Link>
+          <Link href={`/workspaces/${workspaceId}/members`}>Show All</Link>
         </Button>
       </div>
     </div>

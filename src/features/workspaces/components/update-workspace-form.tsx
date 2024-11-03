@@ -249,7 +249,7 @@ const UpdateWorkspaceForm = ({ onCancel, initialValue }: Props) => {
                 />
                 <Button
                   onClick={handleCopyInviteLink}
-                  variant={"muted"}
+                  variant={"secondary"}
                   className={"rounded-l-none"}
                 >
                   <CopyIcon className={"size-4"} />
