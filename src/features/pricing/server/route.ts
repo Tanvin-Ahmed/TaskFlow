@@ -54,11 +54,11 @@ const app = new Hono()
 
     return c.json({ url: stripeSession.url });
   })
-  .get("/", sessionMiddleware, async (c) => {
-    const user = c.get("user");
+  .get("/:userId", sessionMiddleware, async (c) => {
     const databases = c.get("databases");
+    const { userId } = c.req.param();
 
-    if (!user.$id) {
+    if (!userId) {
       return c.json({
         data: {
           ...PLANS[0],
@@ -72,7 +72,7 @@ const app = new Hono()
     const dbUser = await databases.listDocuments<UserPaymentStatus>(
       DATABASE_ID,
       USER_PAYMENT_STATUS_ID,
-      [Query.equal("userId", user.$id)],
+      [Query.equal("userId", userId)],
     );
 
     if (!dbUser.total) {

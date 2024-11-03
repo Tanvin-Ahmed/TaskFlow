@@ -6,12 +6,12 @@ interface Props {
   userId: string;
 }
 
-export const useGetUserIsAdmin = ({ workspaceId, userId }: Props) => {
+export const useGetUserIsOwner = ({ workspaceId, userId }: Props) => {
   const query = useQuery({
-    queryKey: ["isOwner", workspaceId, userId],
+    queryKey: ["isAdmin", workspaceId, userId],
     queryFn: async () => {
       const response = await client.api.workspaces[":workspaceId"][
-        "isOwner"
+        "isAdmin"
       ].$get({
         param: { workspaceId },
       });
@@ -20,8 +20,8 @@ export const useGetUserIsAdmin = ({ workspaceId, userId }: Props) => {
         return null;
       }
 
-      const { isOwner } = await response.json();
-      return isOwner;
+      const { isAdmin } = await response.json();
+      return isAdmin;
     },
   });
 

@@ -65,7 +65,7 @@ const app = new Hono()
 
     return c.json({ data: !!member.$id });
   })
-  .delete("/:memberId", sessionMiddleware, async (c) => {
+  .delete(":memberId", sessionMiddleware, async (c) => {
     const { memberId } = c.req.param();
     const user = c.get("user");
     const databases = c.get("databases");
@@ -122,7 +122,7 @@ const app = new Hono()
     return c.json({ data: { $id: memberToDelete.$id } });
   })
   .patch(
-    "/:memberId",
+    ":memberId",
     sessionMiddleware,
     zValidator("json", z.object({ role: z.nativeEnum(MemberRole) })),
     async (c) => {
@@ -156,11 +156,11 @@ const app = new Hono()
       });
 
       if (!member) {
-        return c.json({ error: "Unauthorized" }, 401);
+        return c.json({ error: "Unauthorized to access" }, 401);
       }
 
       if (member.role !== MemberRole.ADMIN) {
-        return c.json({ error: "Unauthorized" }, 401);
+        return c.json({ error: "Unauthorized to update" }, 401);
       }
 
       if (allMembersInWorkspace.total === 1) {
@@ -175,7 +175,7 @@ const app = new Hono()
       );
       if (workspace.userId === memberId) {
         return c.json(
-          { error: "Cannot downgrade the creator of workspace" },
+          { error: "Cannot downgrade the owner of workspace" },
           400,
         );
       }

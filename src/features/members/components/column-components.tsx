@@ -18,9 +18,9 @@ import { useDeleteMember } from "../api/use-delete-member";
 
 export const AdminSwitcher = ({ data }: { data: Row<Member> }) => {
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
-  const role = data.getValue("role");
-  const memberId = data.getValue("$id") as string;
-  const memberName = data.getValue("name") as string;
+  const role = data.original.role;
+  const memberId = data.original["$id"] as string;
+  const memberName = data.original.name as string;
 
   const { mutate } = useUpdateMember();
 
@@ -42,7 +42,6 @@ export const AdminSwitcher = ({ data }: { data: Row<Member> }) => {
         },
         onError: () => {
           setIsAdmin(role === MemberRole.ADMIN);
-          toast.error("Something went wrong. Please try again.");
         },
       },
     );
@@ -56,8 +55,8 @@ export const AdminSwitcher = ({ data }: { data: Row<Member> }) => {
 };
 
 export const MemberTableAction = ({ data }: { data: Row<Member> }) => {
-  const name = data.getValue("name") as string;
-  const $id = data.getValue("$id") as string;
+  const name = data.original["name"] as string;
+  const $id = data.original["$id"] as string;
 
   const { mutate: deleteMember, isPending: isDeletingMember } =
     useDeleteMember();

@@ -9,7 +9,9 @@ export const useGetSubscription = ({ userId }: Props) => {
   const query = useQuery({
     queryKey: ["subscription", userId],
     queryFn: async () => {
-      const response = await client.api.pricing.$get();
+      const response = await client.api.pricing[":userId"].$get({
+        param: { userId },
+      });
 
       if (!response.ok) {
         return null;

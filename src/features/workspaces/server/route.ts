@@ -256,6 +256,33 @@ const app = new Hono()
       return c.json({ isAdmin: false });
     }
   })
+  .get("/:workspaceId/isOwner", sessionMiddleware, async (c) => {
+    const { workspaceId } = c.req.param();
+    const databases = c.get("databases");
+    const user = c.get("user");
+
+    const member = await getMember({
+      databases,
+      workspaceId,
+      userId: user.$id,
+    });
+
+    if (!member) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
+
+    const workspaceInfo = await databases.getDocument<Workspace>(
+      DATABASE_ID,
+      WORKSPACES_ID,
+      workspaceId,
+    );
+
+    if (workspaceInfo.userId === user.$id) {
+      return c.json({ isOwner: true });
+    } else {
+      return c.json({ isOwner: false });
+    }
+  })
   .post(
     "/",
     zValidator("form", workspaceSchema),

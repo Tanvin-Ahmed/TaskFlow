@@ -20,7 +20,12 @@ export const useDeleteMember = () => {
         param,
       });
 
-      if (!res.ok) throw new Error("Failed to delete member");
+      if (!res.ok) {
+        const errorData = (await res.json()) as {
+          error: string;
+        };
+        throw new Error(errorData.error || "Failed to delete member");
+      }
 
       return await res.json();
     },
@@ -28,8 +33,8 @@ export const useDeleteMember = () => {
       toast.success("Member deleted successfully!");
       queryClient.invalidateQueries({ queryKey: ["members"] });
     },
-    onError: () => {
-      toast.error("Failed to delete member");
+    onError: (error: Error) => {
+      toast.error(error.message || "Failed to delete member");
     },
   });
 

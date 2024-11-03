@@ -5,12 +5,14 @@ import PageLoader from "@/components/custom/shared/page-loader";
 import { useGetMembers } from "@/features/members/api/use-get-members";
 import useGetProjects from "@/features/projects/api/use-get-projects";
 import useGetTasks from "@/features/tasks/api/use-get-tasks";
+import { useGetWorkspace } from "@/features/workspaces/api/use-get-workspace";
 import useGetWorkspaceAnalytics from "@/features/workspaces/api/use-get-workspace-analytics";
 import MeetingButton from "@/features/workspaces/components/meeting-button";
 import MemberList from "@/features/workspaces/components/member-list";
 import ProjectList from "@/features/workspaces/components/project-list";
 import TaskList from "@/features/workspaces/components/task-list";
 import useWorkspaceId from "@/features/workspaces/hooks/use-workspace-id";
+import { LoaderIcon } from "lucide-react";
 import { Models } from "node-appwrite";
 
 interface Props {
@@ -19,6 +21,9 @@ interface Props {
 
 const WorkspaceIdClient = ({ user }: Props) => {
   const workspaceId = useWorkspaceId();
+  const { data: workspace, isLoading: isLoadingWorkspace } = useGetWorkspace({
+    workspaceId,
+  });
   const { data: analytics, isLoading: isLoadingAnalytics } =
     useGetWorkspaceAnalytics({ workspaceId });
   const { data: tasks, isLoading: isLoadingTasks } = useGetTasks({
@@ -50,7 +55,14 @@ const WorkspaceIdClient = ({ user }: Props) => {
   return (
     <div className="flex h-full flex-col space-y-4">
       <Analytics data={analytics} />
-      <MeetingButton user={user} />
+      {isLoadingWorkspace ? (
+        <div className="flex items-center justify-end">
+          <LoaderIcon className="size-4 animate-spin text-muted-foreground" />
+        </div>
+      ) : workspace ? (
+        <MeetingButton user={user} workspace={workspace} />
+      ) : null}
+
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <TaskList data={tasks.documents} total={tasks.total} />
         <ProjectList
