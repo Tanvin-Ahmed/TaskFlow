@@ -4,22 +4,29 @@ import DottedSeparator from "@/components/custom/shared/dotted-separator";
 import { Button } from "@/components/ui/button";
 import useCreateTaskModal from "@/features/tasks/hooks/use-create-task-modal";
 import { PopulatedTask } from "@/features/tasks/types";
-import { CalendarIcon, PlusIcon } from "lucide-react";
+import { CalendarIcon, PlusIcon, LoaderIcon } from "lucide-react";
 import Link from "next/link";
 import useWorkspaceId from "../hooks/use-workspace-id";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatDistanceToNow } from "date-fns";
 import { useTheme } from "next-themes";
+import { Models } from "node-appwrite";
+import { useGetUserIsAdmin } from "../api/use-get-user-isAdmin";
 
 interface Props {
   data: PopulatedTask[];
   total: number;
+  user: Models.User<Models.Preferences>;
 }
 
-const TaskList = ({ data, total }: Props) => {
+const TaskList = ({ data, total, user }: Props) => {
   const { resolvedTheme } = useTheme();
   const workspaceId = useWorkspaceId();
   const { open: createTask } = useCreateTaskModal();
+  const { data: isAdmin, isLoading: isLoadingIsAdmin } = useGetUserIsAdmin({
+    workspaceId,
+    userId: user.$id,
+  });
 
   return (
     <div className="col-span-1 flex flex-col gap-y-4">
@@ -30,8 +37,15 @@ const TaskList = ({ data, total }: Props) => {
             variant={resolvedTheme === "dark" ? "outline" : "muted"}
             size={"icon"}
             onClick={createTask}
+            disabled={isLoadingIsAdmin || !isAdmin}
           >
-            <PlusIcon className="size-4 text-neutral-400" />
+            {isLoadingIsAdmin ? (
+              <div className="flex items-center justify-center">
+                <LoaderIcon />
+              </div>
+            ) : (
+              <PlusIcon className="size-4 text-neutral-400" />
+            )}
           </Button>
         </div>
         <DottedSeparator className="my-4" />

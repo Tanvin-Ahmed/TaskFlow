@@ -8,9 +8,10 @@ import WorkspaceSwitcher from "./workspace-switcher";
 import Projects from "./projects";
 import ProjectProgress from "./project-progress";
 import { Models } from "node-appwrite";
-import { useGetUserIsAdmin } from "@/features/workspaces/api/use-get-user-isAdmin";
 import useWorkspaceId from "@/features/workspaces/hooks/use-workspace-id";
 import { LoaderIcon } from "lucide-react";
+import { useGetUserIsOwner } from "@/features/workspaces/api/use-get-user-isOwner";
+import { useGetWorkspace } from "@/features/workspaces/api/use-get-workspace";
 
 interface Props {
   user: Models.User<Models.Preferences>;
@@ -18,9 +19,12 @@ interface Props {
 
 const Sidebar = ({ user }: Props) => {
   const workspaceId = useWorkspaceId();
-  const { data: isOwner, isLoading: isLoadingIsOwner } = useGetUserIsAdmin({
+  const { data: isOwner, isLoading: isLoadingIsOwner } = useGetUserIsOwner({
     workspaceId,
     userId: user.$id,
+  });
+  const { data: workspace, isLoading: isLoadingWorkspace } = useGetWorkspace({
+    workspaceId,
   });
 
   return (
@@ -36,7 +40,13 @@ const Sidebar = ({ user }: Props) => {
       <DottedSeparator className="my-4" />
       <Navigation />
       <DottedSeparator className="my-4" />
-      <Projects user={user} />
+      {isLoadingWorkspace ? (
+        <div className={"flex items-center justify-center"}>
+          <LoaderIcon className="size-4 animate-spin text-muted-foreground" />
+        </div>
+      ) : (
+        <Projects user={user} isOwner={!!isOwner} workspace={workspace!} />
+      )}
 
       {isLoadingIsOwner ? (
         <div className="flex items-center justify-center">

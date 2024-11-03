@@ -5,6 +5,7 @@ import PageLoader from "@/components/custom/shared/page-loader";
 import { useGetMembers } from "@/features/members/api/use-get-members";
 import useGetProjects from "@/features/projects/api/use-get-projects";
 import useGetTasks from "@/features/tasks/api/use-get-tasks";
+import { useGetUserIsOwner } from "@/features/workspaces/api/use-get-user-isOwner";
 import { useGetWorkspace } from "@/features/workspaces/api/use-get-workspace";
 import useGetWorkspaceAnalytics from "@/features/workspaces/api/use-get-workspace-analytics";
 import MeetingButton from "@/features/workspaces/components/meeting-button";
@@ -35,12 +36,17 @@ const WorkspaceIdClient = ({ user }: Props) => {
   const { data: members, isLoading: isLoadingMembers } = useGetMembers({
     workspaceId,
   });
+  const { data: isOwner, isLoading: isLoadingIsOwner } = useGetUserIsOwner({
+    workspaceId,
+    userId: user.$id,
+  });
 
   const isLoading =
     isLoadingAnalytics ||
     isLoadingTasks ||
     isLoadingProjects ||
-    isLoadingMembers;
+    isLoadingMembers ||
+    isLoadingIsOwner;
 
   const isError = !analytics || !tasks || !projects || !members;
 
@@ -64,12 +70,16 @@ const WorkspaceIdClient = ({ user }: Props) => {
       ) : null}
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <TaskList data={tasks.documents} total={tasks.total} />
-        <ProjectList
-          data={projects.documents}
-          total={projects.total}
-          user={user}
-        />
+        <TaskList data={tasks.documents} total={tasks.total} user={user} />
+        {workspace ? (
+          <ProjectList
+            data={projects.documents}
+            total={projects.total}
+            user={user}
+            isOwner={!!isOwner}
+            workspace={workspace}
+          />
+        ) : null}
         <MemberList data={members.documents} total={members.total} />
       </div>
     </div>

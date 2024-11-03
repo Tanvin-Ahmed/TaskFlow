@@ -12,20 +12,38 @@ import { useTheme } from "next-themes";
 import { DEFAULT_VALUES } from "@/constant/values";
 import { Models } from "node-appwrite";
 import { useGetSubscription } from "@/features/pricing/api/use-get-subscription";
+import { useGetUserIsAdmin } from "../api/use-get-user-isAdmin";
+import { Workspace } from "../types";
 
 interface Props {
   data: Project[];
   total: number;
   user: Models.User<Models.Preferences>;
+  isOwner: boolean;
+  workspace: Workspace;
 }
 
-const ProjectList = ({ data, total, user }: Props) => {
+const ProjectList = ({ data, total, user, isOwner, workspace }: Props) => {
   const { resolvedTheme } = useTheme();
 
   const workspaceId = useWorkspaceId();
   const { open: createProject } = useCreateProjectModal();
+  const { data: isAdmin, isLoading: isLoadingIsAdmin } = useGetUserIsAdmin({
+    workspaceId,
+    userId: user.$id,
+  });
   const { data: subscription, isLoading: isLoadingSubscription } =
-    useGetSubscription({ userId: user.$id });
+    useGetSubscription({ userId: isOwner ? user.$id : workspace.userId });
+
+  const isLoading = isLoadingSubscription || isLoadingIsAdmin;
+  const buttonDisabled =
+    isLoading ||
+    (subscription && subscription.isSubscribed
+      ? false
+      : data
+        ? total >= DEFAULT_VALUES.FREE_VERSION_PROJECT_COUNT_PER_WORKSPACE
+        : false) ||
+    !isAdmin;
 
   return (
     <div className="col-span-1 flex flex-col gap-y-4">
@@ -36,17 +54,9 @@ const ProjectList = ({ data, total, user }: Props) => {
             variant={resolvedTheme === "dark" ? "outline" : "muted"}
             size={"icon"}
             onClick={createProject}
-            disabled={
-              isLoadingSubscription ||
-              (subscription && subscription.isSubscribed
-                ? false
-                : data
-                  ? total >=
-                    DEFAULT_VALUES.FREE_VERSION_PROJECT_COUNT_PER_WORKSPACE
-                  : false)
-            }
+            disabled={buttonDisabled}
           >
-            {isLoadingSubscription ? (
+            {isLoading ? (
               <Loader className="size-4 animate-spin text-muted-foreground" />
             ) : (
               <PlusIcon className="size-4 text-neutral-400" />
