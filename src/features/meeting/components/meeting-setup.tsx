@@ -1,5 +1,4 @@
 "use client";
-
 import { Button } from "@/components/ui/button";
 import {
   DeviceSettings,
@@ -46,7 +45,6 @@ const MeetingSetup = ({ setIsSetupComplete }: Props) => {
       </div>
       <Button
         onClick={() => {
-          call.join();
           setIsSetupComplete(true);
         }}
       >

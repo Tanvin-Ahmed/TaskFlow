@@ -3,6 +3,7 @@ import {
   AlarmClock,
   Calendar,
   CalendarCheck2,
+  LoaderIcon,
   PlusIcon,
   UserRoundPlus,
   Video,
@@ -21,6 +22,7 @@ import { BASE_URL } from "@/config";
 import useWorkspaceId from "@/features/workspaces/hooks/use-workspace-id";
 import { useGetUserIsAdmin } from "@/features/workspaces/api/use-get-user-isAdmin";
 import PageLoader from "@/components/custom/shared/page-loader";
+import { useGetMembers } from "@/features/members/api/use-get-members";
 
 const cardData = [
   {
@@ -80,6 +82,9 @@ const MeetingTypeList = ({ user }: Props) => {
     workspaceId,
     userId: user.$id,
   });
+  const { data: members, isLoading: isLoadingMembers } = useGetMembers({
+    workspaceId,
+  });
 
   const client = useStreamVideoClient();
 
@@ -111,6 +116,10 @@ const MeetingTypeList = ({ user }: Props) => {
         values.dateTime.toISOString() || new Date(Date.now()).toISOString();
       const description = values.description || "Instant meeting";
 
+      const membersId = members?.documents.map((member) => ({
+        user_id: member.$id,
+      }));
+
       await call.getOrCreate({
         data: {
           starts_at: startsAt,
@@ -118,6 +127,7 @@ const MeetingTypeList = ({ user }: Props) => {
             description,
             workspaceId,
           },
+          members: membersId,
         },
       });
 
@@ -212,7 +222,7 @@ const MeetingTypeList = ({ user }: Props) => {
           title="Meeting Created"
           className="text-center"
           buttonText="Copy Meeting Link"
-          buttonIcon="/assets/icons/meeting/copy.svg"
+          ButtonIcon="/assets/icons/meeting/copy.svg"
           image="/assets/icons/meeting/checked.svg"
           handleClick={() => {
             navigator.clipboard.writeText(meetingLink);
@@ -227,6 +237,7 @@ const MeetingTypeList = ({ user }: Props) => {
         title="Start an Instant Meeting"
         className="text-center"
         buttonText="Start Meeting"
+        ButtonIcon={isLoadingMembers ? LoaderIcon : undefined}
         handleClick={createMeeting}
       />
 

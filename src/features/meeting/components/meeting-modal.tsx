@@ -2,8 +2,9 @@
 import ResponsiveModal from "@/components/custom/dashboard/responsive-modal";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { LucideProps } from "lucide-react";
 import Image from "next/image";
-import { ReactNode } from "react";
+import { ForwardRefExoticComponent, ReactNode, RefAttributes } from "react";
 
 interface Props {
   isOpen: boolean;
@@ -14,7 +15,11 @@ interface Props {
   handleClick?: () => void;
   buttonText?: string;
   image?: string;
-  buttonIcon?: string;
+  ButtonIcon?:
+    | string
+    | ForwardRefExoticComponent<
+        Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>
+      >;
 }
 
 const MeetingModal = ({
@@ -26,7 +31,7 @@ const MeetingModal = ({
   children,
   buttonText,
   handleClick,
-  buttonIcon,
+  ButtonIcon,
 }: Props) => {
   return (
     <ResponsiveModal open={isOpen} onOpenChange={onClose}>
@@ -40,9 +45,14 @@ const MeetingModal = ({
           {title}
         </h1>
         {children ?? null}
-        <Button onClick={handleClick}>
-          {buttonIcon ? (
-            <Image src={buttonIcon} alt="icon" width={14} height={14} />
+        <Button
+          onClick={handleClick}
+          disabled={typeof ButtonIcon !== "string" && ButtonIcon !== undefined}
+        >
+          {typeof ButtonIcon === "string" ? (
+            <Image src={ButtonIcon} alt="icon" width={14} height={14} />
+          ) : ButtonIcon !== undefined ? (
+            <ButtonIcon className="size-3 animate-spin text-muted-foreground" />
           ) : null}{" "}
           &nbsp;
           {buttonText || "Schedule Meeting"}
