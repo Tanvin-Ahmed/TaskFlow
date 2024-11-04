@@ -97,11 +97,13 @@ const MeetingTypeList = ({ user }: Props) => {
     link: "",
   });
   const [callDetails, setCallDetails] = useState<Call>();
+  const [isCreatingCall, setIsCreatingCall] = useState(false);
 
   const createMeeting = async () => {
     if (!user || !client) return;
 
     try {
+      setIsCreatingCall(true);
       if (!values.dateTime) {
         toast.warning("Please select a date and time");
         return;
@@ -116,9 +118,13 @@ const MeetingTypeList = ({ user }: Props) => {
         values.dateTime.toISOString() || new Date(Date.now()).toISOString();
       const description = values.description || "Instant meeting";
 
-      const membersId = members?.documents.map((member) => ({
-        user_id: member.$id,
-      }));
+      const membersId = members?.documents
+        .map((member) => ({
+          user_id: member.$id,
+        }))
+        .filter((member) => member.user_id !== user.$id);
+
+      // await createGetStreamUsers(membersId!);
 
       await call.getOrCreate({
         data: {
@@ -126,8 +132,9 @@ const MeetingTypeList = ({ user }: Props) => {
           custom: {
             description,
             workspaceId,
+            members: membersId,
           },
-          members: membersId,
+          // members: membersId,
         },
       });
 
@@ -141,6 +148,8 @@ const MeetingTypeList = ({ user }: Props) => {
     } catch (error) {
       console.log(error);
       toast.error("Failed to create meeting");
+    } finally {
+      setIsCreatingCall(false);
     }
   };
 
@@ -185,6 +194,9 @@ const MeetingTypeList = ({ user }: Props) => {
           onClose={() => setMeetingState(undefined)}
           title="Create Meeting"
           handleClick={createMeeting}
+          ButtonIcon={
+            isLoadingMembers || isCreatingCall ? LoaderIcon : undefined
+          }
         >
           <div className="flex w-full flex-col gap-2.5">
             <label className="text-normal text-base leading-[22px]">
@@ -237,7 +249,7 @@ const MeetingTypeList = ({ user }: Props) => {
         title="Start an Instant Meeting"
         className="text-center"
         buttonText="Start Meeting"
-        ButtonIcon={isLoadingMembers ? LoaderIcon : undefined}
+        ButtonIcon={isLoadingMembers || isCreatingCall ? LoaderIcon : undefined}
         handleClick={createMeeting}
       />
 

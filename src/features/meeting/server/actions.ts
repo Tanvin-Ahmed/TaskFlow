@@ -26,6 +26,25 @@ export const tokenProvider = async () => {
   return token;
 };
 
+export const createGetStreamUsers = async (
+  usersId: {
+    user_id: string;
+  }[],
+) => {
+  const user = await getCurrent();
+  if (!user) throw new Error("User not logged in");
+  if (!streamAPIKey) throw new Error("Stream API key not available");
+  if (!streamSecretKey) throw new Error("No API secret");
+
+  const streamClient = new StreamClient(streamAPIKey, streamSecretKey);
+
+  const usersInfo = usersId.map((user) => ({ id: user.user_id }));
+  await streamClient.upsertUsers(usersInfo);
+  // await streamClient.deleteUsers({
+  //   user_ids: usersInfo.map((userId) => userId.id),
+  // });
+};
+
 export const deleteCallById = async (id: string) => {
   const user = await getCurrent();
   if (!user) throw new Error("User not logged in");

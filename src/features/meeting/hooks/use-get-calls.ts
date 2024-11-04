@@ -23,13 +23,15 @@ const useGetCalls = ({ workspaceId, user }: Props) => {
           sort: [{ field: "starts_at", direction: -1 }],
           filter_conditions: {
             starts_at: { $exists: true },
-            $or: [
-              { created_by_user_id: user.$id },
-              { members: { $in: [user.$id] } },
-            ],
+            // $or: [
+            //   { created_by_user_id: user.$id },
+            //   { "custom.members": { $in: [{ user_id: user.$id }] } },
+            // ],
             "custom.workspaceId": workspaceId,
           },
         });
+
+        console.log(calls);
 
         const now = new Date();
         const endedCalls = calls?.filter(

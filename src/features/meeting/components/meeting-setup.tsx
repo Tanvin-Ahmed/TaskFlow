@@ -46,6 +46,7 @@ const MeetingSetup = ({ setIsSetupComplete }: Props) => {
       <Button
         onClick={() => {
           setIsSetupComplete(true);
+          call.join();
         }}
       >
         Join meeting
