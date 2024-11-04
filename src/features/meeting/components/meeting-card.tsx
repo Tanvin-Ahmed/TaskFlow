@@ -44,7 +44,10 @@ const MeetingCard = ({
   const queryClient = useQueryClient();
   const workspaceId = useWorkspaceId();
 
-  const isAdmin = useGetUserIsAdmin({ workspaceId, userId: user.$id });
+  const { data: isAdmin, isLoading: isLoadingIsAdmin } = useGetUserIsAdmin({
+    workspaceId,
+    userId: user.$id,
+  });
   const { data: usersInfo, isLoading } = useGetMembers({ workspaceId });
 
   const [isLoadingDelete, setIsLoadingDelete] = useState(false);
@@ -69,7 +72,9 @@ const MeetingCard = ({
       <article className="flex flex-col gap-5">
         <div className="flex items-center justify-between gap-5">
           <Image src={icon} alt="upcoming" width={28} height={28} />
-          {isAdmin ? (
+          {isLoadingIsAdmin ? (
+            <LoaderIcon className="size-3 animate-spin text-muted-foreground" />
+          ) : isAdmin && type === "call" ? (
             <Button
               variant="destructive"
               size={"icon"}

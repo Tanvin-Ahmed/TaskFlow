@@ -31,8 +31,6 @@ const useGetCalls = ({ workspaceId, user }: Props) => {
           },
         });
 
-        console.log(calls);
-
         const now = new Date();
         const endedCalls = calls?.filter(
           ({ state: { startsAt, endedAt } }: Call) =>
