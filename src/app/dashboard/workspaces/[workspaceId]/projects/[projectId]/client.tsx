@@ -8,8 +8,13 @@ import useGetProjectAnalytics from "@/features/projects/api/use-get-project-anal
 import ProjectHeader from "@/features/projects/components/project-header";
 import useProjectId from "@/features/projects/hooks/use-project-id";
 import TaskViewSwitcher from "@/features/tasks/components/task-view-switcher";
+import { Models } from "node-appwrite";
 
-const ProjectIdClient = () => {
+interface Props {
+  user: Models.User<Models.Preferences>;
+}
+
+const ProjectIdClient = ({ user }: Props) => {
   const projectId = useProjectId();
   const { data: project, isLoading: projectLoading } = useGetProject({
     projectId,
@@ -32,7 +37,7 @@ const ProjectIdClient = () => {
     <section className="flex flex-col gap-y-4">
       <ProjectHeader initialValues={project} />
       {analytics ? <Analytics data={analytics} /> : null}
-      <TaskViewSwitcher hideProjectFilter />
+      <TaskViewSwitcher hideProjectFilter user={user} />
     </section>
   );
 };

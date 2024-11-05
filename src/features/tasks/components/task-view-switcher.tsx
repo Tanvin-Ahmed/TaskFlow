@@ -22,7 +22,7 @@ import { Models } from "node-appwrite";
 interface Props {
   hideProjectFilter?: boolean;
   hideAssigneeFilters?: boolean;
-  user?: Models.User<Models.Preferences>;
+  user: Models.User<Models.Preferences>;
 }
 
 const TaskViewSwitcher = ({
@@ -41,7 +41,7 @@ const TaskViewSwitcher = ({
     status: status ?? undefined,
     assigneeId: assigneeId
       ? assigneeId
-      : hideAssigneeFilters && user
+      : hideAssigneeFilters
         ? user.$id
         : undefined,
     projectId: hideProjectFilter ? urlProjectId : (projectId ?? undefined),
@@ -119,6 +119,7 @@ const TaskViewSwitcher = ({
               <DataKanban
                 data={tasks?.documents ?? []}
                 onChange={onKanbanChange}
+                user={user}
               />
             </TabsContent>
             <TabsContent value={"calender"} className="mt-0">

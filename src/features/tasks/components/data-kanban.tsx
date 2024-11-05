@@ -9,6 +9,8 @@ import {
 } from "@hello-pangea/dnd";
 import KanbanBoardHeader from "./kanban-board-header";
 import KanbanCard from "./kanban-card";
+import { Models } from "node-appwrite";
+import { toast } from "sonner";
 
 interface Props {
   data: PopulatedTask[];
@@ -19,6 +21,7 @@ interface Props {
       position: number;
     }[],
   ) => void;
+  user: Models.User<Models.Preferences>;
 }
 
 const boards: TaskStatus[] = [
@@ -33,7 +36,7 @@ type TasksState = {
   [key in TaskStatus]: PopulatedTask[];
 };
 
-const DataKanban = ({ data, onChange }: Props) => {
+const DataKanban = ({ data, onChange, user }: Props) => {
   const [tasks, setTasks] = useState<TasksState>(() => {
     const initialTasks: TasksState = {
       [TaskStatus.BACKLOG]: [],
@@ -81,6 +84,14 @@ const DataKanban = ({ data, onChange }: Props) => {
       const { source, destination } = result;
       const sourceStatus = source.droppableId as TaskStatus;
       const destinationStatus = destination.droppableId as TaskStatus;
+
+      // Retrieve the task being moved
+      const taskToMove = tasks[sourceStatus][source.index];
+
+      // Check if the logged-in user is the owner of the task
+      if (taskToMove.assignee.$id !== user.$id) {
+        return toast.error("Only assignee can update the task");
+      }
 
       const updatesPayload: {
         $id: string;
