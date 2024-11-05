@@ -11,12 +11,12 @@ export default async function Home() {
   return (
     <>
       <Navbar />
+      <HeroText />
       <main className="container mx-auto max-h-[100%] min-h-[100vh] w-full space-y-20 px-4">
         <BgGrid />
         {/* <div className="mt-20 -mb-24 hidden dark:block">
           <Planet />
         </div> */}
-        <HeroText />
         <Services />
       </main>
       <Footer />

@@ -42,7 +42,7 @@ interface Props {
     imageUrl: string;
   }[];
   memberOptions: {
-    $id: string;
+    userId: string;
     name: string;
   }[];
   status?: TaskStatus;
@@ -75,7 +75,7 @@ const CreateTaskForm = ({
         onSuccess: () => {
           form.reset();
           onCancel?.();
-          setStatusTo("");
+          setStatusTo(null);
         },
       },
     );
@@ -137,7 +137,7 @@ const CreateTaskForm = ({
                       <FormMessage />
                       <SelectContent>
                         {memberOptions.map((member) => (
-                          <SelectItem key={member.$id} value={member.$id}>
+                          <SelectItem key={member.userId} value={member.userId}>
                             <div className="flex items-center gap-x-2">
                               <MemberAvatar
                                 className="size-6"
@@ -247,7 +247,7 @@ const CreateTaskForm = ({
                 variant={"secondary"}
                 onClick={() => {
                   onCancel?.();
-                  setStatusTo("");
+                  setStatusTo(null);
                 }}
                 className={cn("invisible w-full sm:w-fit", {
                   visible: onCancel,

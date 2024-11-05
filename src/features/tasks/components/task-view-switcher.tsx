@@ -1,5 +1,4 @@
 "use client";
-
 import DottedSeparator from "@/components/custom/shared/dotted-separator";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -18,12 +17,19 @@ import { TaskStatus } from "../types";
 import { useBulkUpdateTasks } from "../api/use-bulk-update-tasks";
 import DataCalender from "./data-calender";
 import useProjectId from "@/features/projects/hooks/use-project-id";
+import { Models } from "node-appwrite";
 
 interface Props {
   hideProjectFilter?: boolean;
+  hideAssigneeFilters?: boolean;
+  user?: Models.User<Models.Preferences>;
 }
 
-const TaskViewSwitcher = ({ hideProjectFilter }: Props) => {
+const TaskViewSwitcher = ({
+  hideProjectFilter,
+  hideAssigneeFilters,
+  user,
+}: Props) => {
   const workspaceId = useWorkspaceId();
   const urlProjectId = useProjectId();
   const { open, setStatusTo } = useCreateTaskModal();
@@ -33,7 +39,11 @@ const TaskViewSwitcher = ({ hideProjectFilter }: Props) => {
   const { data: tasks, isLoading: isLoadingTasks } = useGetTasks({
     workspaceId,
     status: status ?? undefined,
-    assigneeId: assigneeId ?? undefined,
+    assigneeId: assigneeId
+      ? assigneeId
+      : hideAssigneeFilters && user
+        ? user.$id
+        : undefined,
     projectId: hideProjectFilter ? urlProjectId : (projectId ?? undefined),
     dueDate: dueDate ?? undefined,
     search: search ?? undefined,
@@ -78,7 +88,7 @@ const TaskViewSwitcher = ({ hideProjectFilter }: Props) => {
           <Button
             onClick={() => {
               open();
-              setStatusTo("");
+              setStatusTo(null);
             }}
             size={"sm"}
             className="w-full sm:w-auto"
@@ -87,7 +97,10 @@ const TaskViewSwitcher = ({ hideProjectFilter }: Props) => {
           </Button>
         </div>
         <DottedSeparator className="my-4" />
-        <DataFilters hideProjectFilters={hideProjectFilter} />
+        <DataFilters
+          hideProjectFilters={hideProjectFilter}
+          hideAssigneeFilters={hideAssigneeFilters}
+        />
         <DottedSeparator className="my-4" />
         {isLoadingTasks ? (
           <div

@@ -8,7 +8,7 @@ const TaskPage = async () => {
 
   return (
     <section className="flex h-full flex-col">
-      <TaskViewSwitcher />
+      <TaskViewSwitcher hideAssigneeFilters user={user} />
     </section>
   );
 };

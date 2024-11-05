@@ -23,7 +23,7 @@ const CreateTaskFormWrapper = ({ onCancel, status }: Props) => {
   });
 
   const [memberOptions, setMemberOptions] = useState<
-    { $id: string; name: string }[] | []
+    { userId: string; name: string }[] | []
   >([]);
   const [projectOptions, setProjectOptions] = useState<
     { $id: string; name: string; imageUrl: string }[] | []
@@ -32,9 +32,9 @@ const CreateTaskFormWrapper = ({ onCancel, status }: Props) => {
   useEffect(() => {
     if (!members?.total) return;
 
-    const memberOptions = members?.documents.map((project) => ({
-      $id: project.$id,
-      name: project.name,
+    const memberOptions = members?.documents.map((member) => ({
+      userId: member.userId,
+      name: member.name,
     }));
     setMemberOptions(memberOptions ?? []);
   }, [members]);

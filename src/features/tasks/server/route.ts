@@ -12,6 +12,7 @@ import { ID, Query } from "node-appwrite";
 import { createAdminClient } from "@/lib/appwrite";
 import { PopulatedTask, Task } from "../types";
 import { Project } from "@/features/projects/types";
+import { Member } from "@/features/members/types";
 
 const app = new Hono()
   .get(
@@ -67,10 +68,10 @@ const app = new Hono()
         projectIds.length > 0 ? [Query.contains("$id", projectIds)] : [],
       );
       // find all assignee information
-      const members = await databases.listDocuments(
+      const members = await databases.listDocuments<Member>(
         DATABASE_ID,
         MEMBERS_ID,
-        assigneeIds.length > 0 ? [Query.contains("$id", assigneeIds)] : [],
+        assigneeIds.length > 0 ? [Query.contains("userId", assigneeIds)] : [],
       );
 
       const assignees = await Promise.all(
@@ -79,8 +80,8 @@ const app = new Hono()
 
           return {
             ...member,
-            name: user.name || user.email,
-            email: user.email,
+            name: user?.name || user?.email,
+            email: user?.email,
           };
         }),
       );
@@ -90,19 +91,19 @@ const app = new Hono()
         const project = projects.documents.find(
           (p) => p.$id === task.projectId,
         )!;
-        const assignee = assignees.find((a) => a.$id === task.assigneeId)!;
+        const assignee = assignees.find((a) => a.userId === task.assigneeId)!;
 
         return {
           ...task,
           project: {
-            name: project.name,
-            imageUrl: task?.imageUrl,
+            name: project?.name,
+            imageUrl: project?.imageUrl,
             $id: project.$id,
           },
           assignee: {
-            name: assignee.name,
-            email: assignee.email,
-            $id: assignee.$id,
+            name: assignee?.name,
+            email: assignee?.email,
+            $id: assignee.userId,
           },
         };
       });

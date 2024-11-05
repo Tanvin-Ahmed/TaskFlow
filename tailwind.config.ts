@@ -55,8 +55,12 @@ const config: Config = {
         },
       },
       backgroundImage: {
-        "hero-dark": "url('/assets/img/features/hero-background-dark.png')",
-        hero: "url('/assets/img/features/hero-background.jpg')",
+        "meeting-hero-dark":
+          "url('/assets/img/features/hero-background-dark.png')",
+        "meeting-hero": "url('/assets/img/features/hero-background.jpg')",
+        "hero-dark":
+          "linear-gradient(to right, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0)), url('/assets/img/cover-dark.jpg')",
+        hero: "linear-gradient(to right, rgba(255, 255, 255, 1), rgba(0, 0, 0, 0)), url('/assets/img/cover-white.jpg')",
       },
       borderRadius: {
         lg: "var(--radius)",

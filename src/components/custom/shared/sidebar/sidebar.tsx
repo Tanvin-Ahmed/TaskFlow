@@ -38,7 +38,7 @@ const Sidebar = ({ user }: Props) => {
       <DottedSeparator className="my-4" />
       <WorkspaceSwitcher />
       <DottedSeparator className="my-4" />
-      <Navigation />
+      <Navigation user={user} />
       <DottedSeparator className="my-4" />
       {isLoadingWorkspace ? (
         <div className={"flex items-center justify-center"}>
@@ -50,7 +50,7 @@ const Sidebar = ({ user }: Props) => {
 
       {isLoadingIsOwner ? (
         <div className="flex items-center justify-center">
-          <LoaderIcon className="size-5 animate-spin text-muted-foreground" />
+          <LoaderIcon className="size-4 animate-spin text-muted-foreground" />
         </div>
       ) : isOwner ? (
         <>

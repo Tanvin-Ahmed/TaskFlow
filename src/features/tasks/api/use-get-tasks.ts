@@ -35,7 +35,10 @@ const useGetTasks = ({
       });
 
       if (!response.ok) {
-        return null;
+        const errorData = (await response.json()) as {
+          error: string;
+        };
+        throw new Error(errorData.error || "Tasks not found!");
       }
 
       const { data } = await response.json();

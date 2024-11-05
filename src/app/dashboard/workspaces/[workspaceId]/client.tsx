@@ -80,7 +80,11 @@ const WorkspaceIdClient = ({ user }: Props) => {
             workspace={workspace}
           />
         ) : null}
-        <MemberList data={members.documents} total={members.total} />
+        <MemberList
+          data={members.documents}
+          total={members.total}
+          user={user}
+        />
       </div>
     </div>
   );

@@ -56,6 +56,11 @@ export const pricingItems = [
         text: "Mobile-friendly interface",
       },
       {
+        text: "Video conference",
+        footnote: "Unable to create video conference",
+        negative: true,
+      },
+      {
         text: "Higher-quality responses",
         footnote: "Better algorithmic responses for enhanced work experience",
         negative: true,
@@ -84,6 +89,10 @@ export const pricingItems = [
       },
       {
         text: "Mobile-friendly interface",
+      },
+      {
+        text: "Video conference",
+        footnote: "User can able to create video conference",
       },
       {
         text: "Higher-quality responses",

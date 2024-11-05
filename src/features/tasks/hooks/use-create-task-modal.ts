@@ -10,14 +10,14 @@ const useCreateTaskModal = () => {
   );
 
   const [status, setStatus] = useQueryState(
-    "status",
+    "fixed-status",
     parseAsString.withDefault("").withOptions({}),
   );
 
   const open = () => setIsOpen(true);
   const close = () => setIsOpen(false);
 
-  const setStatusTo = (newStatus: TaskStatus | string) => {
+  const setStatusTo = (newStatus: TaskStatus | null) => {
     setStatus(newStatus);
   };
 

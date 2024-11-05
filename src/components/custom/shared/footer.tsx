@@ -54,8 +54,7 @@ const Footer = () => {
         </Dock>
       </div>
       <small className="text-center">
-        &copy; {new Date().getFullYear()} by A. N. M. Tanvin Ahmed. All rights
-        reserved.
+        &copy; {new Date().getFullYear()} by Task Flow. All rights reserved.
       </small>
       <small className="text-[12px]">
         Developed by{" "}

@@ -36,7 +36,7 @@ const FeatureCard = ({ src, title, description }: FeatureCardProps) => {
           alt="feature-img"
           width={400}
           height={300}
-          className="w-full rounded-md object-cover"
+          className="h-full w-full rounded-md object-cover md:h-[200px]"
         />
         <CardTitle className="text-2xl">{title}</CardTitle>
       </CardHeader>

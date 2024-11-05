@@ -21,9 +21,10 @@ import { cn } from "@/lib/utils";
 
 interface Props {
   hideProjectFilters?: boolean;
+  hideAssigneeFilters?: boolean;
 }
 
-const DataFilters = ({ hideProjectFilters }: Props) => {
+const DataFilters = ({ hideProjectFilters, hideAssigneeFilters }: Props) => {
   const workspaceId = useWorkspaceId();
   const { data: projects, isLoading: isLoadingProjects } = useGetProjects({
     workspaceId,
@@ -121,7 +122,11 @@ const DataFilters = ({ hideProjectFilters }: Props) => {
         defaultValue={assigneeId ?? undefined}
         onValueChange={onAssigneeChange}
       >
-        <SelectTrigger className={"h-8 w-full sm:w-auto"}>
+        <SelectTrigger
+          className={cn("h-8 w-full sm:w-auto", {
+            hidden: hideAssigneeFilters,
+          })}
+        >
           <div className="flex items-center pr-2">
             <UserIcon className="mr-2 size-4" />
             <SelectValue placeholder={"All assignees"} />
