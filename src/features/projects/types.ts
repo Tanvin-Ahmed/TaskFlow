@@ -8,4 +8,5 @@ export type Project = Models.Document & {
   workspaceId: string;
   docs?: string;
   canvas?: string;
+  isDocCreated?: string;
 };

@@ -19,21 +19,71 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { DropdownMenuItem } from "@radix-ui/react-dropdown-menu";
+import { toast } from "sonner";
+import { createDocument } from "@/features/live-block/server/actions";
+import { Models } from "node-appwrite";
+import { useUpdateProject } from "../api/use-update-project";
+import useProjectId from "../hooks/use-project-id";
+import { useState } from "react";
 
 interface Props {
   initialValues: Project;
+  user: Models.User<Models.Preferences>;
 }
 
-const ProjectHeader = ({ initialValues }: Props) => {
+const ProjectHeader = ({ initialValues, user }: Props) => {
   const router = useRouter();
+  const projectId = useProjectId();
   const { data, isLoading } = useGetProjects({
     workspaceId: initialValues.workspaceId,
   });
+  const { mutate, isPending } = useUpdateProject();
+  const [isLoadingCreateRoom, setIsLoadingCreateRoom] = useState(false);
 
   const onChange = (id: string) => {
     router.push(
       `/dashboard/workspaces/${initialValues.workspaceId}/projects/${id}`,
     );
+  };
+
+  const documentHandler = async () => {
+    try {
+      setIsLoadingCreateRoom(true);
+
+      if (initialValues.isDocCreated) {
+        router.push(
+          `/dashboard/workspaces/${initialValues.workspaceId}/projects/${initialValues.$id}/doc`,
+        );
+        return;
+      }
+
+      const room = await createDocument({
+        userId: user.$id,
+        email: user.email,
+        projectId: initialValues.$id,
+        projectName: initialValues.name,
+        workspaceId: initialValues.workspaceId,
+      });
+
+      if (room) {
+        mutate({
+          param: { projectId },
+          form: {
+            isDocCreated: "true",
+          },
+        });
+
+        router.push(
+          `/dashboard/workspaces/${initialValues.workspaceId}/projects/${initialValues.$id}/doc`,
+        );
+      }
+    } catch (error) {
+      toast.error(
+        (error as Error).message || "Something went wrong. Please try again",
+      );
+    } finally {
+      setIsLoadingCreateRoom(false);
+    }
   };
 
   return (
@@ -90,14 +140,20 @@ const ProjectHeader = ({ initialValues }: Props) => {
               <Button
                 variant={"ghost"}
                 size={"sm"}
-                asChild
+                onClick={documentHandler}
                 className="flex w-full justify-start"
+                disabled={isPending || isLoadingCreateRoom}
               >
-                <Link
-                  href={`/dashboard/workspaces/${initialValues.workspaceId}/projects/${initialValues.$id}/doc`}
-                >
-                  <FileIcon className="mr-2 size-3" /> Write doc
-                </Link>
+                {isPending || isLoadingCreateRoom ? (
+                  <>
+                    <Loader className="mr-2 size-3 animate-spin text-muted-foreground" />{" "}
+                    Creating doc
+                  </>
+                ) : (
+                  <>
+                    <FileIcon className="mr-2 size-3" /> Write doc
+                  </>
+                )}
               </Button>
             </DropdownMenuItem>
           </DropdownMenuContent>

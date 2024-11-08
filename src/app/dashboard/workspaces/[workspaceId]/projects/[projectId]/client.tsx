@@ -35,7 +35,7 @@ const ProjectIdClient = ({ user }: Props) => {
 
   return (
     <section className="flex flex-col gap-y-4">
-      <ProjectHeader initialValues={project} />
+      <ProjectHeader initialValues={project} user={user} />
       {analytics ? <Analytics data={analytics} /> : null}
       <TaskViewSwitcher hideProjectFilter user={user} />
     </section>

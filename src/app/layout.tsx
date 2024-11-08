@@ -6,6 +6,9 @@ import "./globals.css";
 import QueryProviders from "@/components/providers/query-provider";
 import { Toaster } from "@/components/ui/sonner";
 import "react-datepicker/dist/react-datepicker.css";
+import LiveBlockProvider from "@/components/providers/liveblock-provider";
+import "@liveblocks/react-ui/styles.css";
+import "@liveblocks/react-lexical/styles.css";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -36,10 +39,12 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <QueryProviders>
-            <Toaster />
-            {children}
-          </QueryProviders>
+          <LiveBlockProvider>
+            <QueryProviders>
+              <Toaster />
+              {children}
+            </QueryProviders>
+          </LiveBlockProvider>
         </ThemeProvider>
       </body>
     </html>

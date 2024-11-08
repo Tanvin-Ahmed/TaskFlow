@@ -305,7 +305,7 @@ const app = new Hono()
       const user = c.get("user");
 
       const { projectId } = c.req.param();
-      const { name, image, docs, canvas } = c.req.valid("form");
+      const { name, image, docs, canvas, isDocCreated } = c.req.valid("form");
 
       const existingProject = await databases.getDocument<Project>(
         DATABASE_ID,
@@ -360,6 +360,7 @@ const app = new Hono()
           imageId: imageId ?? existingProject?.imageId,
           docs,
           canvas,
+          isDocCreated: isDocCreated ? Boolean(isDocCreated) : undefined,
         },
       );
 

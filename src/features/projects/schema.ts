@@ -21,4 +21,5 @@ export const updateProjectSchema = z.object({
     .optional(),
   docs: z.string().optional(),
   canvas: z.string().optional(),
+  isDocCreated: z.string().optional(),
 });

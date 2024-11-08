@@ -42,5 +42,8 @@ export const createSessionClient = async () => {
     get databases() {
       return new Databases(client);
     },
+    get users() {
+      return new Users(client);
+    },
   };
 };

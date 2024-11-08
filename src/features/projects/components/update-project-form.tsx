@@ -77,13 +77,14 @@ const UpdateProjectForm = ({ onCancel, initialValue }: Props) => {
   };
 
   const onSubmit = (values: z.infer<typeof updateProjectSchema>) => {
-    const finalValues = {
-      ...values,
-      image: values.image instanceof File ? values.image : "",
-    };
-
     mutate(
-      { form: finalValues, param: { projectId: initialValue.$id } },
+      {
+        form: {
+          ...values,
+          image: values.image instanceof File ? values.image : "",
+        },
+        param: { projectId: initialValue.$id },
+      },
       {
         onSuccess: ({ data }) => {
           router.push(
