@@ -25,6 +25,11 @@ import { Models } from "node-appwrite";
 import { useUpdateProject } from "../api/use-update-project";
 import useProjectId from "../hooks/use-project-id";
 import { useState } from "react";
+import {
+  getIsAdmin,
+  getIsOwner,
+  getProjectAssignees,
+} from "@/features/auth/server/queries";
 
 interface Props {
   initialValues: Project;
@@ -50,9 +55,29 @@ const ProjectHeader = ({ initialValues, user }: Props) => {
     try {
       setIsLoadingCreateRoom(true);
 
+      const isAdmin = await getIsAdmin(initialValues.workspaceId, user.$id);
+      const isOwner = await getIsOwner(user.$id, initialValues.workspaceId);
+
+      const assignees = await getProjectAssignees(
+        initialValues.$id,
+        initialValues.workspaceId,
+      );
+      const isAssignee = assignees.includes(user.$id);
+
+      if (!isAssignee || !isOwner || !isAdmin) {
+        toast.warning("Unauthorized to access the project documentation.");
+      }
+
       if (initialValues.isDocCreated) {
         router.push(
           `/dashboard/workspaces/${initialValues.workspaceId}/projects/${initialValues.$id}/doc`,
+        );
+        return;
+      }
+
+      if (!isOwner) {
+        toast.error(
+          "Only workspace owner can create the project documentation.",
         );
         return;
       }

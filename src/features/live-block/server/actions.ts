@@ -2,7 +2,7 @@
 import { revalidatePath } from "next/cache";
 import { CreateDocumentParams, RoomAccesses } from "../types";
 import { liveblocks } from "./route";
-import { getIsOwner, getWorkspaceUsers } from "@/features/auth/server/queries";
+import { getWorkspaceUsers } from "@/features/auth/server/queries";
 
 export const createDocument = async ({
   userId,
@@ -14,13 +14,6 @@ export const createDocument = async ({
   const roomId = projectId;
 
   try {
-    // check is the creator of the document is creator or not
-    const isOwner = await getIsOwner(userId, workspaceId);
-
-    if (!isOwner) {
-      throw new Error("Only workspace owner can create documents");
-    }
-
     const usersInfo = await getWorkspaceUsers(workspaceId);
 
     const usersWithoutCreator = usersInfo.users?.filter(

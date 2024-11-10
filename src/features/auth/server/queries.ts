@@ -1,6 +1,9 @@
+"use server";
+
 import {
   DATABASE_ID,
   MEMBERS_ID,
+  TASKS_ID,
   USER_PAYMENT_STATUS_ID,
   WORKSPACES_ID,
 } from "@/config";
@@ -11,8 +14,10 @@ import {
 import { ID, Permission, Query, Role } from "node-appwrite";
 import { PaymentStatus } from "@/features/pricing/types";
 import { getUserColor } from "@/lib/utils";
-import { Member } from "@/features/members/types";
+import { Member, MemberRole } from "@/features/members/types";
 import { Workspace } from "@/features/workspaces/types";
+import { getMember } from "@/features/members/utils";
+import { Task } from "@/features/tasks/types";
 
 export const getCurrent = async () => {
   try {
@@ -60,6 +65,29 @@ export const getWorkspaceUsers = async (workspaceId: string) => {
   return membersInfo;
 };
 
+export const getProjectAssignees = async (
+  projectId: string,
+  workspaceId: string,
+) => {
+  const { databases } = await createSessionClient();
+
+  const user = await getCurrent();
+  if (!user) throw new Error("Unauthorized to access");
+
+  const member = await getMember({ databases, workspaceId, userId: user.$id });
+  if (!member) throw new Error("Unauthorized to access");
+
+  const tasks = await databases.listDocuments<Task>(DATABASE_ID, TASKS_ID, [
+    Query.equal("projectId", projectId),
+  ]);
+
+  const assigneeIds = Array.from(
+    new Set(tasks.documents.map((doc) => doc.assigneeId)),
+  );
+
+  return assigneeIds;
+};
+
 export const getIsOwner = async (
   userId: string,
   workspaceId: string,
@@ -73,6 +101,22 @@ export const getIsOwner = async (
   );
 
   return workspace.userId === userId;
+};
+
+export const getIsAdmin = async (workspaceId: string, userId: string) => {
+  const { databases } = await createSessionClient();
+
+  const member = await getMember({
+    databases,
+    workspaceId,
+    userId,
+  });
+
+  if (!member) {
+    throw new Error("Unauthorized access");
+  }
+
+  return member.role === MemberRole.ADMIN;
 };
 
 export const createUserPaymentStatusInBD = async () => {
