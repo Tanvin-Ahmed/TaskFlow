@@ -87,7 +87,6 @@ const ProjectHeader = ({ initialValues, user }: Props) => {
         email: user.email,
         projectId: initialValues.$id,
         projectName: initialValues.name,
-        workspaceId: initialValues.workspaceId,
       });
 
       if (room) {

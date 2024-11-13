@@ -16,7 +16,7 @@ interface Props {
 const LiveBlockProvider = ({ children }: Props) => {
   return (
     <LiveblocksProvider
-      authEndpoint={"/api/liveblocks-auth"}
+      authEndpoint={"/api/liveblocks"}
       resolveUsers={async ({ userIds }) => {
         const usersInfo = await getUsers(userIds);
         return usersInfo;

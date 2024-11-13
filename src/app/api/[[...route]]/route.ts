@@ -20,7 +20,7 @@ const routes = app
   .route("/tasks", tasks)
   .route("/pricing", pricing)
   .route("/webhook", webhooks)
-  .route("/liveblocks-auth", liveblocks);
+  .route("/liveblocks", liveblocks);
 
 export const GET = handle(app);
 export const POST = handle(app);

@@ -3,10 +3,11 @@ export type CreateDocumentParams = {
   email: string;
   projectId: string;
   projectName: string;
-  workspaceId: string;
 };
 
-type AccessType = ["room:write"] | ["room:read", "room:presence:write"];
+export type UserType = "editor" | "viewer";
+
+export type AccessType = ["room:write"] | ["room:read", "room:presence:write"];
 
 export type RoomAccesses = Record<string, AccessType>;
 

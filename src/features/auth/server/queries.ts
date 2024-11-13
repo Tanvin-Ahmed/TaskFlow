@@ -48,10 +48,15 @@ export const getUsers = async (userIds: string[]) => {
   return sortedUsers;
 };
 
-export const getWorkspaceUsers = async (workspaceId: string) => {
+export const getUserDetailsByIds = async (userIds: string[]) => {
   const { users } = await createAdminClient();
-  const { databases } = await createSessionClient();
+  const userDetails = await users.list([Query.contains("$id", userIds)]);
 
+  return userDetails;
+};
+
+export const getWorkspaceUsers = async (workspaceId: string) => {
+  const { databases } = await createSessionClient();
   const members = await databases.listDocuments<Member>(
     DATABASE_ID,
     MEMBERS_ID,
@@ -59,8 +64,7 @@ export const getWorkspaceUsers = async (workspaceId: string) => {
   );
 
   const memberIds = members.documents.map((member) => member.userId);
-
-  const membersInfo = await users.list([Query.contains("$id", memberIds)]);
+  const membersInfo = await getUserDetailsByIds(memberIds);
 
   return membersInfo;
 };

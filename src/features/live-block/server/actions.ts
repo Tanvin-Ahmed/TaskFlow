@@ -2,31 +2,19 @@
 import { revalidatePath } from "next/cache";
 import { CreateDocumentParams, RoomAccesses } from "../types";
 import { liveblocks } from "./route";
-import { getWorkspaceUsers } from "@/features/auth/server/queries";
 
 export const createDocument = async ({
   userId,
   email,
   projectId,
   projectName,
-  workspaceId,
 }: CreateDocumentParams) => {
   const roomId = projectId;
 
   try {
-    const usersInfo = await getWorkspaceUsers(workspaceId);
-
-    const usersWithoutCreator = usersInfo.users?.filter(
-      (user) => user.email !== email,
-    );
-
     const usersAccesses: RoomAccesses = {
       [email]: ["room:write"],
     };
-
-    usersWithoutCreator.forEach((user) => {
-      usersAccesses[user.email] = ["room:read", "room:presence:write"];
-    });
 
     const metadata = {
       creatorId: userId,
@@ -38,7 +26,7 @@ export const createDocument = async ({
     const room = await liveblocks.createRoom(roomId, {
       metadata,
       usersAccesses,
-      defaultAccesses: ["room:write"],
+      defaultAccesses: [],
     });
 
     revalidatePath("/dashboard/workspaces");
@@ -86,3 +74,56 @@ export const getDocumentUsers = async ({
 
   return otherUsers;
 };
+
+// type ShareDocumentParams = {
+//   roomId: string;
+//   email: string;
+//   userType: UserType;
+//   updatedBy: string;
+//   pathToRevalidate: string;
+// };
+
+// export const updateDocumentAccess = async ({
+//   roomId,
+//   email,
+//   userType,
+//   // updatedBy,
+//   pathToRevalidate,
+// }: ShareDocumentParams) => {
+//   const usersAccesses: RoomAccesses = {
+//     [email]: getAccessType(userType) as AccessType,
+//   };
+
+//   const room = await liveblocks.updateRoom(roomId, { usersAccesses });
+
+//   if (room) {
+//     // TODO: send a notification to the user
+//   }
+
+//   revalidatePath(pathToRevalidate);
+// };
+
+// export const removeCollaborator = async ({
+//   roomId,
+//   email,
+//   pathToRevalidate,
+// }: {
+//   roomId: string;
+//   email: string;
+//   pathToRevalidate: string;
+// }) => {
+//   const room = await liveblocks.getRoom(roomId);
+
+//   if (room.metadata.email === email) {
+//     throw new Error("You cannot remove yourself from the document");
+//   }
+
+//   const updateRoom = await liveblocks.updateRoom(roomId, {
+//     usersAccesses: {
+//       [email]: null,
+//     },
+//   });
+
+//   revalidatePath(pathToRevalidate);
+//   return updateRoom;
+// };
