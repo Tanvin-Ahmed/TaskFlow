@@ -5,6 +5,7 @@ import UserButton from "@/features/auth/components/user-button";
 import { usePathname } from "next/navigation";
 import MobileSidebar from "../../shared/sidebar/mobile-sidebar";
 import { Models } from "node-appwrite";
+import Notification from "@/features/notifications/components/notification";
 
 const pageNameMap = {
   tasks: {
@@ -47,6 +48,7 @@ const DashboardNavbar = ({ user }: Props) => {
         </div>
         <div className="flex items-center justify-center gap-2">
           <UserButton />
+          <Notification />
           <ThemeToggle />
         </div>
       </nav>

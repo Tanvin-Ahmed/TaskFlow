@@ -25,9 +25,9 @@ const TaskOverview = ({ task }: Props) => {
           <Button
             onClick={() => open(task.$id)}
             size={"sm"}
-            variant={"secondary"}
+            variant={"outline"}
           >
-            <PencilIcon className="mr-2 size-4" />
+            <PencilIcon className="mr-2 size-3" />
             Edit
           </Button>
         </div>

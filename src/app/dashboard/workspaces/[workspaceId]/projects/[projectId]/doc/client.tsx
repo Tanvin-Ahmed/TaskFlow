@@ -1,14 +1,5 @@
 "use client";
-import { useState } from "react";
-
-import { Excalidraw, MainMenu, WelcomeScreen } from "@excalidraw/excalidraw";
-import { useTheme } from "next-themes";
-import {
-  ExcalidrawElement,
-  Theme,
-} from "@excalidraw/excalidraw/types/element/types";
 import useProjectId from "@/features/projects/hooks/use-project-id";
-import useGetProject from "@/features/projects/api/use-get-project";
 import PageLoader from "@/components/custom/shared/page-loader";
 import ActiveCollaborators from "@/features/live-block/components/active-collaborators";
 import { Editor } from "@/components/editor/Editor";
@@ -16,15 +7,15 @@ import { Badge } from "@/components/ui/badge";
 import ShareModal from "@/features/live-block/components/share-modal";
 import useShareDocModal from "@/features/live-block/hooks/use-share-doc-modal";
 import { Button } from "@/components/ui/button";
-import { VscGitPullRequestGoToChanges } from "react-icons/vsc";
 import useGetDoc from "@/features/live-block/api/use-get-doc";
 import { useGetUserIsAdmin } from "@/features/workspaces/api/use-get-user-isAdmin";
 import useWorkspaceId from "@/features/workspaces/hooks/use-workspace-id";
 import { Models } from "node-appwrite";
 import { useGetUserIsOwner } from "@/features/workspaces/api/use-get-user-isOwner";
-import { LoaderIcon, TrashIcon } from "lucide-react";
+import { LoaderIcon, TrashIcon, UserPlus } from "lucide-react";
 import useConfirm from "@/hooks/use-confirm";
 import { useDeleteDoc } from "@/features/live-block/api/use-delete-doc";
+import Notification from "@/features/live-block/components/notification";
 
 interface Props {
   user: Models.User<Models.Preferences>;
@@ -35,9 +26,6 @@ const DocClient = ({ user }: Props) => {
   const workspaceId = useWorkspaceId();
 
   // get data hooks
-  const { data: project, isLoading: isLoadingProject } = useGetProject({
-    projectId,
-  });
   const { data: docInfo, isLoading: isLoadingDocInfo } = useGetDoc({
     roomId: projectId,
   });
@@ -61,17 +49,12 @@ const DocClient = ({ user }: Props) => {
     "This action cannot be undone.",
     "destructive",
   );
-  const { resolvedTheme } = useTheme();
+  // const { resolvedTheme } = useTheme();
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [canvas, setCanvas] = useState<readonly ExcalidrawElement[]>([]);
+  // const [canvas, setCanvas] = useState<readonly ExcalidrawElement[]>([]);
 
-  if (
-    isLoadingProject ||
-    isLoadingDocInfo ||
-    isLoadingIsAdmin ||
-    isLoadingIsOwner
-  ) {
+  if (isLoadingDocInfo || isLoadingIsAdmin || isLoadingIsOwner) {
     return <PageLoader />;
   }
 
@@ -79,14 +62,14 @@ const DocClient = ({ user }: Props) => {
     throw new Error("Document not found");
   }
 
-  const handleDocumentationDelete = async (roomId: string) => {
+  const handleDocumentationDelete = async () => {
     const ok = await confirm();
     if (!ok) {
       return;
     }
 
     deleteDoc({
-      param: { roomId },
+      param: { roomId: projectId },
     });
   };
 
@@ -95,6 +78,7 @@ const DocClient = ({ user }: Props) => {
       {/* modal */}
       <ShareModal
         creatorId={docInfo.room.metadata.creatorId as string}
+        creatorEmail={docInfo.room.metadata.email as string}
         currentUserType={docInfo.currentUserType}
         collaborators={docInfo.collaborators}
       />
@@ -114,10 +98,12 @@ const DocClient = ({ user }: Props) => {
         <div className="flex items-center justify-center gap-3">
           <ActiveCollaborators />
 
+          <Notification />
+
           {isOwner || isAdmin ? (
             // only workspace owner or workspace admin can give access permissions to other team members
             <Button onClick={openShareDoc}>
-              <VscGitPullRequestGoToChanges className="size-5 sm:mr-1 sm:size-4" />{" "}
+              <UserPlus className="size-5 sm:mr-1 sm:size-4" />{" "}
               <span className="hidden sm:block">Give Access</span>
             </Button>
           ) : null}
@@ -127,7 +113,7 @@ const DocClient = ({ user }: Props) => {
             <Button
               variant={"destructive"}
               size={"icon"}
-              onClick={() => handleDocumentationDelete(projectId)}
+              onClick={handleDocumentationDelete}
               disabled={isPendingDelete}
             >
               {isPendingDelete ? (
@@ -143,7 +129,7 @@ const DocClient = ({ user }: Props) => {
       <Editor currentUserType={docInfo.currentUserType} />
 
       {/* whiteboard/canvas */}
-      <div className="h-[70vh] overflow-auto">
+      {/* <div className="h-[70vh] overflow-auto">
         <Excalidraw
           isCollaborating
           initialData={{
@@ -177,7 +163,7 @@ const DocClient = ({ user }: Props) => {
             </WelcomeScreen.Center>
           </WelcomeScreen>
         </Excalidraw>
-      </div>
+      </div> */}
     </section>
   );
 };

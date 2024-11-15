@@ -19,7 +19,7 @@ const MemberAvatar = ({ name, className, fallbackClassName, style }: Props) => {
     >
       <AvatarFallback
         className={cn(
-          "flex items-center justify-center bg-neutral-200 font-medium text-neutral-500 dark:bg-purple-900/30 dark:text-purple-100",
+          "flex items-center justify-center bg-neutral-200 font-medium !text-neutral-500 dark:bg-purple-900/30 dark:text-purple-100",
           fallbackClassName,
         )}
       >

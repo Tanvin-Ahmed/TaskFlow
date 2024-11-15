@@ -138,11 +138,12 @@ const app = new Hono()
       task.projectId,
     );
 
-    const member = await databases.getDocument(
+    const memberList = await databases.listDocuments<Member>(
       DATABASE_ID,
       MEMBERS_ID,
-      task.assigneeId,
+      [Query.equal("userId", task.assigneeId)],
     );
+    const member = memberList.documents[0];
 
     const userInfo = await users.get(member.userId);
 

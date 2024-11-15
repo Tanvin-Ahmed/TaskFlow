@@ -25,11 +25,8 @@ import { Models } from "node-appwrite";
 import { useUpdateProject } from "../api/use-update-project";
 import useProjectId from "../hooks/use-project-id";
 import { useState } from "react";
-import {
-  getIsAdmin,
-  getIsOwner,
-  getProjectAssignees,
-} from "@/features/auth/server/queries";
+import { getIsOwner } from "@/features/auth/server/queries";
+import useGetProject from "../api/use-get-project";
 
 interface Props {
   initialValues: Project;
@@ -42,7 +39,11 @@ const ProjectHeader = ({ initialValues, user }: Props) => {
   const { data, isLoading } = useGetProjects({
     workspaceId: initialValues.workspaceId,
   });
+  const { data: project, isLoading: isLoadingProject } = useGetProject({
+    projectId,
+  });
   const { mutate, isPending } = useUpdateProject();
+
   const [isLoadingCreateRoom, setIsLoadingCreateRoom] = useState(false);
 
   const onChange = (id: string) => {
@@ -55,20 +56,18 @@ const ProjectHeader = ({ initialValues, user }: Props) => {
     try {
       setIsLoadingCreateRoom(true);
 
-      const isAdmin = await getIsAdmin(initialValues.workspaceId, user.$id);
       const isOwner = await getIsOwner(user.$id, initialValues.workspaceId);
+      const isPermitted = project?.docPermissionMemberList
+        ? (JSON.parse(project.docPermissionMemberList) as string[]).includes(
+            user.email,
+          )
+        : false;
 
-      const assignees = await getProjectAssignees(
-        initialValues.$id,
-        initialValues.workspaceId,
-      );
-      const isAssignee = assignees.includes(user.$id);
-
-      if (!isAssignee || !isOwner || !isAdmin) {
-        toast.warning("Unauthorized to access the project documentation.");
+      if (!isOwner && !isPermitted) {
+        throw new Error("Not permitted to access the project documentation.");
       }
 
-      if (initialValues.isDocCreated) {
+      if (initialValues?.isDocCreated) {
         router.push(
           `/dashboard/workspaces/${initialValues.workspaceId}/projects/${initialValues.$id}/doc`,
         );
@@ -76,10 +75,9 @@ const ProjectHeader = ({ initialValues, user }: Props) => {
       }
 
       if (!isOwner) {
-        toast.error(
+        throw new Error(
           "Only workspace owner can create the project documentation.",
         );
-        return;
       }
 
       const room = await createDocument({
@@ -94,6 +92,7 @@ const ProjectHeader = ({ initialValues, user }: Props) => {
           param: { projectId },
           form: {
             isDocCreated: "true",
+            docPermissionMemberList: JSON.stringify([user.email]),
           },
         });
 
@@ -117,7 +116,7 @@ const ProjectHeader = ({ initialValues, user }: Props) => {
           <SelectValue defaultValue={initialValues.$id} />
         </SelectTrigger>
         <SelectContent>
-          {isLoading ? (
+          {isLoading || isLoadingProject ? (
             <div className="flex items-center justify-center">
               <Loader className="size-4 animate-spin" />
             </div>

@@ -33,6 +33,8 @@ import DottedSeparator from "@/components/custom/shared/dotted-separator";
 import UserTypeSelector from "./user-type-selector";
 import { updateDocAccessSchema } from "../schema";
 import { useUpdateDoc } from "../api/use-update-doc";
+import { useEffect, useState } from "react";
+import { Models } from "node-appwrite";
 
 const animatedComponents = makeAnimated();
 
@@ -69,6 +71,7 @@ const colorStyles: StylesConfig = {
 
 interface Props {
   creatorId: string;
+  creatorEmail: string;
   currentUserType: UserType;
   collaborators: ({
     userType: UserType;
@@ -79,15 +82,35 @@ interface Props {
   } | null)[];
 }
 
-const ShareModal = ({ collaborators, creatorId }: Props) => {
+const ShareModal = ({ collaborators, creatorId, creatorEmail }: Props) => {
   const { resolvedTheme } = useTheme();
   const roomId = useProjectId();
   const { isOpen, setIsOpen } = useShareDocModal();
+  const user = useSelf();
+
   const { data: assigneesInfo, isLoading: isLoadingAssigneesInfo } =
     useGetAssignees({ projectId: roomId });
   const { mutate, isPending } = useUpdateDoc();
 
-  const user = useSelf();
+  const [assigneesToShow, setAssigneesToShow] = useState<
+    Partial<Models.User<Models.Preferences>>[]
+  >([]);
+
+  useEffect(() => {
+    if (!assigneesInfo || !assigneesInfo.length) {
+      setAssigneesToShow([]);
+      return;
+    }
+
+    // need to display those assignees whose are in room collaborators list and need to hide the owner also
+    const assignees = assigneesInfo
+      .filter(
+        (assignee) => !collaborators.find((co) => co?.email === assignee.email),
+      )
+      .filter((assignee) => assignee.email !== creatorEmail);
+
+    setAssigneesToShow(assignees);
+  }, [assigneesInfo, collaborators, creatorEmail]);
 
   const form = useForm<z.infer<typeof updateDocAccessSchema>>({
     resolver: zodResolver(updateDocAccessSchema),
@@ -160,7 +183,7 @@ const ShareModal = ({ collaborators, creatorId }: Props) => {
                               field.onChange(selectedEmails); // Update form state with selected emails
                             }}
                             options={
-                              assigneesInfo?.map((user) => ({
+                              assigneesToShow.map((user) => ({
                                 label: user.name,
                                 value: user.email,
                               })) || []

@@ -31,7 +31,7 @@ const UserTypeSelector = ({
       <SelectTrigger className="shad-select">
         <SelectValue />
       </SelectTrigger>
-      <SelectContent className="border-none dark:bg-dark-300">
+      <SelectContent className="border-none dark:bg-dark-200">
         <SelectItem value="viewer" className="shad-select-item">
           Can view
         </SelectItem>

@@ -1,3 +1,5 @@
+"use server";
+
 import { Query } from "node-appwrite";
 import { DATABASE_ID, WORKSPACES_ID, MEMBERS_ID } from "@/config";
 import { Workspace } from "./types";

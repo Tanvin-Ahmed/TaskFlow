@@ -108,7 +108,7 @@ const app = new Hono()
         return c.json({ error: "Unauthorized" }, 401);
       }
 
-      // 1st check is the user is owner or admin (if any assignee is admin)
+      // check is the user is owner or admin (if any assignee is admin)
       const projectTask = await databases.listDocuments<Task>(
         DATABASE_ID,
         TASKS_ID,
@@ -118,22 +118,35 @@ const app = new Hono()
       const isOwner = await getIsOwner(user.$id, existingProject.workspaceId);
       const isAdmin = await getIsAdmin(existingProject.workspaceId, user.$id);
 
-      if (!isOwner || !isAssignee || (isAssignee && !isAdmin)) {
+      if (!isOwner && (!isAssignee || (isAssignee && !isAdmin))) {
         return c.json({ error: "Unauthorized" }, 401);
       }
 
-      // 2nd give the permission
+      // get room access information
+      const room = await liveblocks.getRoom(roomId);
+
+      // give the permission
       const type = getAccessType(userType) as AccessType;
-      const usersAccesses: Record<string, AccessType> = {};
+      const usersAccesses: Record<string, AccessType> = {
+        ...room.usersAccesses,
+      };
       emails.forEach((email) => {
         usersAccesses[email] = type;
       });
 
-      const room = await liveblocks.updateRoom(roomId, { usersAccesses });
+      const updatedRoom = await liveblocks.updateRoom(roomId, {
+        usersAccesses,
+      });
 
-      if (room) {
+      if (updatedRoom) {
         // TODO: send a notification to the user
       }
+
+      // save in db
+      const permittedEmails = Object.keys(usersAccesses);
+      await databases.updateDocument(DATABASE_ID, PROJECTS_ID, roomId, {
+        docPermissionMemberList: JSON.stringify(permittedEmails),
+      });
 
       return c.json({ data: room });
     },
@@ -187,6 +200,25 @@ const app = new Hono()
       },
     });
 
+    // save it in db
+    const project = await databases.getDocument<Project>(
+      DATABASE_ID,
+      PROJECTS_ID,
+      roomId,
+    );
+
+    if (project.docPermissionMemberList) {
+      const permittedUsers = JSON.parse(
+        project.docPermissionMemberList,
+      ) as string[];
+
+      await databases.updateDocument(DATABASE_ID, PROJECTS_ID, roomId, {
+        docPermissionMemberList: JSON.stringify(
+          permittedUsers.filter((email) => email !== collaboratorId),
+        ),
+      });
+    }
+
     return c.json({ data: updateRoom });
   })
   .delete("/delete-room/:roomId", sessionMiddleware, async (c) => {
@@ -207,6 +239,11 @@ const app = new Hono()
     }
 
     await liveblocks.deleteRoom(roomId);
+
+    // save it in db
+    await databases.updateDocument(DATABASE_ID, PROJECTS_ID, roomId, {
+      docPermissionMemberList: undefined,
+    });
 
     return c.json({ data: { success: true, roomId } });
   });

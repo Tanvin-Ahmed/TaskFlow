@@ -42,9 +42,9 @@ const TaskDescription = ({ task }: Props) => {
           variant={"secondary"}
         >
           {isEditing ? (
-            <XIcon className="mr-2 size-4" />
+            <XIcon className="mr-2 size-3" />
           ) : (
-            <PencilIcon className="mr-2 size-4" />
+            <PencilIcon className="mr-2 size-3" />
           )}
           {isEditing ? "Cancel" : "Edit"}
         </Button>

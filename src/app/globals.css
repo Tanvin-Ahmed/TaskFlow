@@ -383,3 +383,16 @@ body {
 .css-1nmdiq5-menu {
   @apply dark:!border dark:!bg-dark-200;
 }
+
+/* doc notification stype override */
+.dark .lb-avatar-fallback {
+  @apply !text-white;
+}
+
+.dark .lb-inbox-notification-title {
+  @apply !text-indigo-200;
+}
+
+.dark .lb-inbox-notification-title .lb-user {
+  @apply !text-white;
+}

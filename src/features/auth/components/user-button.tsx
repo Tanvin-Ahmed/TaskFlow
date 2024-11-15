@@ -18,7 +18,7 @@ const UserButton = () => {
 
   if (isLoading) {
     return (
-      <div className="flex size-10 items-center justify-center rounded-full border border-neutral-300 bg-neutral-200">
+      <div className="flex size-8 items-center justify-center rounded-full border border-neutral-300 bg-neutral-200">
         <Loader className="size-4 animate-spin text-muted-foreground" />
       </div>
     );
@@ -36,7 +36,7 @@ const UserButton = () => {
         <CustomAvatar
           src=""
           alt={avatarFallback}
-          className="size-10 border border-neutral-300 transition hover:opacity-75 dark:border-purple-300"
+          className="size-8 border border-neutral-300 transition hover:opacity-75 dark:border-purple-300"
           fallbackClassName="bg-neutral-200 dark:bg-purple-900/40 font-medium text-neutral-500"
         />
       </DropdownMenuTrigger>
@@ -50,8 +50,8 @@ const UserButton = () => {
           <CustomAvatar
             src=""
             alt={avatarFallback}
-            className="size-[52px] border border-neutral-300 transition hover:opacity-75"
-            fallbackClassName="bg-neutral-200 text-xl font-medium text-neutral-500"
+            className="size-[52px] border border-neutral-300 transition hover:opacity-75 dark:border-purple-300"
+            fallbackClassName="bg-neutral-200 dark:bg-purple-900/40 text-xl font-medium text-neutral-500"
           />
           <div className="flex flex-col items-center justify-center">
             <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
