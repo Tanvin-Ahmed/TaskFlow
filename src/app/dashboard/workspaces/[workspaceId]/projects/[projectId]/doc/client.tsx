@@ -15,7 +15,6 @@ import { useGetUserIsOwner } from "@/features/workspaces/api/use-get-user-isOwne
 import { LoaderIcon, TrashIcon, UserPlus } from "lucide-react";
 import useConfirm from "@/hooks/use-confirm";
 import { useDeleteDoc } from "@/features/live-block/api/use-delete-doc";
-import Notification from "@/features/live-block/components/notification";
 
 interface Props {
   user: Models.User<Models.Preferences>;
@@ -97,8 +96,6 @@ const DocClient = ({ user }: Props) => {
         </div>
         <div className="flex items-center justify-center gap-3">
           <ActiveCollaborators />
-
-          <Notification />
 
           {isOwner || isAdmin ? (
             // only workspace owner or workspace admin can give access permissions to other team members

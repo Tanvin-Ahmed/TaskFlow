@@ -90,7 +90,7 @@ const app = new Hono()
       const user = c.get("user");
 
       const { roomId } = c.req.param();
-      const { emails, userType } = c.req.valid("json");
+      const { emails, userType, updatedBy } = c.req.valid("json");
 
       const existingProject = await databases.getDocument<Project>(
         DATABASE_ID,
@@ -139,7 +139,23 @@ const app = new Hono()
       });
 
       if (updatedRoom) {
-        // TODO: send a notification to the user
+        // notification send to the users
+        emails.forEach(async (email) => {
+          const notificationId = crypto.randomUUID();
+
+          await liveblocks.triggerInboxNotification({
+            userId: email,
+            kind: "$documentAccess",
+            subjectId: notificationId,
+            roomId,
+            activityData: {
+              userType,
+              title: `You have been granted ${userType} access to the ${existingProject.name}'s documentation.`,
+              updatedBy: updatedBy.name,
+              email: updatedBy.email,
+            },
+          });
+        });
       }
 
       // save in db

@@ -117,7 +117,10 @@ const ShareModal = ({ collaborators, creatorId, creatorEmail }: Props) => {
     defaultValues: {
       emails: [],
       userType: "viewer",
-      updatedBy: user.info.email,
+      updatedBy: {
+        name: user.info.name,
+        email: user.info.email,
+      },
     },
   });
 
