@@ -11,7 +11,7 @@ import {
   TASKS_ID,
   WORKSPACES_ID,
 } from "@/config";
-import { Query } from "node-appwrite";
+import { ID, Query } from "node-appwrite";
 import { Member, MemberRole } from "../types";
 import { Workspace } from "@/features/workspaces/types";
 
@@ -158,6 +158,12 @@ const app = new Hono()
 
     //   finally delete the member
     await databases.deleteDocument(DATABASE_ID, MEMBERS_ID, memberId);
+
+    // notify all other members of the workspace
+    await databases.createDocument(DATABASE_ID, NOTIFICATIONS_ID, ID.unique(), {
+      workspaceId: workspace.$id,
+      message: `Admin remove ${memberToDelete.name} from this workspace.`,
+    });
 
     return c.json({ data: { $id: memberToDelete.$id } });
   })
