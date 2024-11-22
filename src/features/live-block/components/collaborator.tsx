@@ -41,7 +41,10 @@ const Collaborator = ({ collaborator, creatorId, roomId, user }: Props) => {
       json: {
         emails: [collaborator.email],
         userType: type,
-        updatedBy: user.email,
+        updatedBy: {
+          email: user.email,
+          name: user.name,
+        },
       },
       param: { roomId },
     });
