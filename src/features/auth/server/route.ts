@@ -6,8 +6,19 @@ import { ID, Permission, Query, Role } from "node-appwrite";
 import { deleteCookie, setCookie } from "hono/cookie";
 import { AUTH_COOKIE } from "../constant";
 import { sessionMiddleware } from "@/lib/session-middleware";
-import { DATABASE_ID, USER_PAYMENT_STATUS_ID } from "@/config";
+import {
+  DATABASE_ID,
+  MEMBERS_ID,
+  PROJECTS_ID,
+  TASKS_ID,
+  USER_PAYMENT_STATUS_ID,
+  WORKSPACES_ID,
+} from "@/config";
 import { PaymentStatus } from "@/features/pricing/types";
+import { Member } from "@/features/members/types";
+import { Workspace } from "@/features/workspaces/types";
+import { Task } from "@/features/tasks/types";
+import { Project } from "@/features/projects/types";
 
 const app = new Hono()
   .get("/current", sessionMiddleware, async (c) => {
@@ -21,7 +32,7 @@ const app = new Hono()
     const session = await account.createEmailPasswordSession(email, password);
     setCookie(c, AUTH_COOKIE, session.secret, {
       path: "/",
-      httpOnly: true,
+      // httpOnly: true,
       secure: true,
       sameSite: "strict",
       maxAge: 60 * 60 * 24 * 30,
@@ -64,7 +75,7 @@ const app = new Hono()
 
     setCookie(c, AUTH_COOKIE, session.secret, {
       path: "/",
-      httpOnly: true,
+      // httpOnly: true,
       secure: true,
       sameSite: "strict",
       maxAge: 60 * 60 * 24 * 30,
@@ -78,6 +89,52 @@ const app = new Hono()
     deleteCookie(c, AUTH_COOKIE);
     await account.deleteSession("current");
     return c.json({ success: true });
-  });
+  })
+  .get("/attached-with", sessionMiddleware, async (c) => {
+    const databases = c.get("databases");
+    const user = c.get("user");
 
+    // get all workspaces information where the current user added
+    const memberOfWorkspace = await databases.listDocuments<Member>(
+      DATABASE_ID,
+      MEMBERS_ID,
+      [Query.equal("userId", user.$id)],
+    );
+    const workspaceIds = memberOfWorkspace.documents.map((m) => m.workspaceId);
+    let workspaces;
+
+    if (workspaceIds.length) {
+      workspaces = await databases.listDocuments<Workspace>(
+        DATABASE_ID,
+        WORKSPACES_ID,
+        [Query.contains("$id", workspaceIds)],
+      );
+    }
+
+    // get all projects information where the current user added
+    const tasks = await databases.listDocuments<Task>(DATABASE_ID, TASKS_ID, [
+      Query.equal("assigneeId", user.$id),
+    ]);
+    const uniqueProjectIds = Array.from(
+      new Set(tasks.documents.map((doc) => doc.projectId)),
+    );
+
+    let projects;
+    if (uniqueProjectIds.length) {
+      projects = await databases.listDocuments<Project>(
+        DATABASE_ID,
+        PROJECTS_ID,
+        [Query.contains("$id", uniqueProjectIds)],
+      );
+    }
+
+    return c.json({
+      data: {
+        workspaces: workspaces?.documents ?? [],
+        workspaceIds,
+        projects: projects?.documents ?? [],
+        projectIds: uniqueProjectIds,
+      },
+    });
+  });
 export default app;

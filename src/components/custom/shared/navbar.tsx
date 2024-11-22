@@ -40,7 +40,9 @@ const Navbar = () => {
           {/* for large screen */}
           <div className="hidden items-center justify-center gap-2 sm:flex">
             {user ? (
-              <UserButton />
+              <>
+                <UserButton />
+              </>
             ) : pathname === "/sign-up" ? (
               <Link href={"/sign-in"}>
                 <Button>Sign In</Button>

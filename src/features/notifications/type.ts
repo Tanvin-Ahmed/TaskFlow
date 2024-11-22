@@ -1,6 +1,15 @@
 import { Models } from "node-appwrite";
 
 export type Notification = Models.Document & {
+  workspaceId: string;
+  message: string;
+  projectId?: string;
+  to?: string;
+  readAt?: Date;
+  link?: string;
+};
+
+export type PopulatedNotification = Models.Document & {
   workspace: {
     $id: string;
     name: string;
@@ -12,4 +21,5 @@ export type Notification = Models.Document & {
   };
   to?: string;
   readAt?: Date;
+  link?: string;
 };

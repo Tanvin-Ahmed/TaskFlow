@@ -1,6 +1,7 @@
 import CustomAvatar from "@/components/custom/shared/custom-avatar";
 import { ThemeToggle } from "@/components/custom/shared/theme-button";
 import UserButton from "@/features/auth/components/user-button";
+import Notification from "@/features/notifications/components/notification";
 import Link from "next/link";
 import { ReactNode } from "react";
 
@@ -19,8 +20,9 @@ const StandaloneLayout = ({ children }: Props) => {
               <span className="text-primary">Task</span> Flow
             </h1>
           </Link>
-          <div className="flex items-center justify-center gap-3">
+          <div className="flex items-center justify-center gap-2">
             <UserButton />
+            <Notification />
             <ThemeToggle />
           </div>
         </nav>

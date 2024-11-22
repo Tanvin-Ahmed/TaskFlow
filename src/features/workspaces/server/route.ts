@@ -6,6 +6,7 @@ import {
   DATABASE_ID,
   IMAGES_BUCKET_ID,
   MEMBERS_ID,
+  NOTIFICATIONS_ID,
   PROJECTS_ID,
   TASKS_ID,
   USER_PAYMENT_STATUS_ID,
@@ -442,6 +443,17 @@ const app = new Hono()
           role: MemberRole.MEMBER,
         });
       }
+
+      // notify other workspace member that this user join in workspace
+      await databases.createDocument(
+        DATABASE_ID,
+        NOTIFICATIONS_ID,
+        ID.unique(),
+        {
+          workspaceId,
+          message: `${user.name} has joined in ${workspace.name} workspace.`,
+        },
+      );
 
       return c.json({ data: workspace });
     },

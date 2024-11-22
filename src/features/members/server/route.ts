@@ -4,7 +4,13 @@ import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { z } from "zod";
 import { getMember } from "../utils";
-import { DATABASE_ID, MEMBERS_ID, WORKSPACES_ID } from "@/config";
+import {
+  DATABASE_ID,
+  MEMBERS_ID,
+  NOTIFICATIONS_ID,
+  TASKS_ID,
+  WORKSPACES_ID,
+} from "@/config";
 import { Query } from "node-appwrite";
 import { Member, MemberRole } from "../types";
 import { Workspace } from "@/features/workspaces/types";
@@ -71,7 +77,7 @@ const app = new Hono()
     const databases = c.get("databases");
 
     //   check is the member is in database or not
-    const memberToDelete = await databases.getDocument(
+    const memberToDelete = await databases.getDocument<Member>(
       DATABASE_ID,
       MEMBERS_ID,
       memberId,
@@ -114,6 +120,40 @@ const app = new Hono()
     );
     if (workspace.userId === memberId) {
       return c.json({ error: "Cannot delete the creator of workspace" }, 400);
+    }
+
+    // delete all tasks under this workspace that was assigned to this member
+    const tasks = await databases.listDocuments(DATABASE_ID, TASKS_ID, [
+      Query.and([
+        Query.equal("assigneeId", memberId),
+        Query.equal("workspaceId", memberToDelete.workspaceId),
+      ]),
+    ]);
+    if (tasks.total) {
+      for (const task of tasks.documents) {
+        await databases.deleteDocument(DATABASE_ID, TASKS_ID, task.$id);
+      }
+    }
+
+    // delete all notification where to = memberId and workspaceId = this workspaceId
+    const notifications = await databases.listDocuments(
+      DATABASE_ID,
+      NOTIFICATIONS_ID,
+      [
+        Query.and([
+          Query.equal("workspaceId", memberToDelete.workspaceId),
+          Query.equal("to", memberId),
+        ]),
+      ],
+    );
+    if (notifications.total) {
+      for (const notification of notifications.documents) {
+        await databases.deleteDocument(
+          DATABASE_ID,
+          NOTIFICATIONS_ID,
+          notification.$id,
+        );
+      }
     }
 
     //   finally delete the member

@@ -31,7 +31,6 @@ const DashboardNavbar = ({ user }: Props) => {
   const pathname = usePathname();
   const pathnameParts = pathname.split("/");
   const pathnameKey = pathnameParts[4] as keyof typeof pageNameMap;
-
   const { description, title } = pageNameMap[pathnameKey] || defaultMap;
 
   return (

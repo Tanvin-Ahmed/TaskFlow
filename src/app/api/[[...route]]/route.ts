@@ -8,6 +8,7 @@ import tasks from "@/features/tasks/server/route";
 import pricing from "@/features/pricing/server/route";
 import webhooks from "@/features/webhooks/server/route";
 import liveblocks from "@/features/live-block/server/route";
+import notifications from "@/features/notifications/server/route";
 
 const app = new Hono().basePath("/api");
 
@@ -20,7 +21,8 @@ const routes = app
   .route("/tasks", tasks)
   .route("/pricing", pricing)
   .route("/webhook", webhooks)
-  .route("/liveblocks", liveblocks);
+  .route("/liveblocks", liveblocks)
+  .route("/notifications", notifications);
 
 export const GET = handle(app);
 export const POST = handle(app);
