@@ -19,7 +19,7 @@ const NotificationList = ({ className, notifications }: Props) => {
         ))
       ) : (
         <small className="flex w-full items-center justify-center text-xs text-muted-foreground">
-          No notifications
+          No notifications!
         </small>
       )}
     </div>

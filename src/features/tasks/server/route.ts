@@ -7,12 +7,19 @@ import {
   getTaskSchema,
 } from "../schema";
 import { getMember } from "@/features/members/utils";
-import { DATABASE_ID, MEMBERS_ID, PROJECTS_ID, TASKS_ID } from "@/config";
+import {
+  DATABASE_ID,
+  MEMBERS_ID,
+  NOTIFICATIONS_ID,
+  PROJECTS_ID,
+  TASKS_ID,
+} from "@/config";
 import { ID, Query } from "node-appwrite";
 import { createAdminClient } from "@/lib/appwrite";
 import { PopulatedTask, Task } from "../types";
 import { Project } from "@/features/projects/types";
 import { Member } from "@/features/members/types";
+import { getIsAdmin, getIsOwner } from "@/features/auth/server/queries";
 
 const app = new Hono()
   .get(
@@ -182,6 +189,26 @@ const app = new Hono()
         return c.json({ error: "Unauthorized" }, 401);
       }
 
+      // check if the user is admin or owner of the workspace
+      const isAdmin = getIsAdmin(workspaceId, user.$id);
+      const isOwner = getIsOwner(user.$id, workspaceId);
+
+      if (!isAdmin && !isOwner) {
+        return c.json(
+          {
+            error:
+              "Unauthorized. Only admin or owner can assign task to the members.",
+          },
+          401,
+        );
+      }
+
+      const project = await databases.getDocument<Project>(
+        DATABASE_ID,
+        PROJECTS_ID,
+        projectId,
+      );
+
       const hightestPositionTask = await databases.listDocuments(
         DATABASE_ID,
         TASKS_ID,
@@ -213,6 +240,24 @@ const app = new Hono()
           description,
         },
       );
+
+      // notify the assignee
+      // is admin or owner assign him to the task then no need to notify
+      if (user.$id !== assigneeId) {
+        await databases.createDocument(
+          DATABASE_ID,
+          NOTIFICATIONS_ID,
+          ID.unique(),
+          {
+            workspaceId,
+            projectId,
+            to: assigneeId,
+            taskId: task.$id,
+            message: `${user.name} assigned you to a task, named ${name} in ${project.name} project`,
+            link: `/workspaces/${workspaceId}/projects/${projectId}`,
+          },
+        );
+      }
 
       return c.json({ data: task });
     },
@@ -301,6 +346,20 @@ const app = new Hono()
         return c.json({ error: "Unauthorized" }, 401);
       }
 
+      // check if the user is admin or owner of the workspace
+      const isAdmin = getIsAdmin(existingTask.workspaceId, user.$id);
+      const isOwner = getIsOwner(user.$id, existingTask.workspaceId);
+
+      if (!isAdmin && !isOwner) {
+        return c.json(
+          {
+            error:
+              "Unauthorized. Only admin or owner can assign task to the members.",
+          },
+          401,
+        );
+      }
+
       const task = await databases.updateDocument(
         DATABASE_ID,
         TASKS_ID,
@@ -314,6 +373,33 @@ const app = new Hono()
           description,
         },
       );
+
+      // if change the assigneeId then notify the new assignee
+      if (assigneeId && existingTask.assigneeId !== assigneeId) {
+        const project = await databases.getDocument(
+          DATABASE_ID,
+          PROJECTS_ID,
+          projectId || existingTask.projectId,
+        );
+
+        const notificationArray = await databases.listDocuments(
+          DATABASE_ID,
+          NOTIFICATIONS_ID,
+          [Query.equal("taskId", existingTask.$id)],
+        );
+        const notification = notificationArray.documents[0];
+
+        await databases.updateDocument(
+          DATABASE_ID,
+          NOTIFICATIONS_ID,
+          notification.$id,
+          {
+            projectId,
+            to: assigneeId,
+            message: `${user.name} assigned you to a task, named ${name} in ${project.name} project`,
+          },
+        );
+      }
 
       return c.json({ data: task });
     },
@@ -339,6 +425,24 @@ const app = new Hono()
     }
 
     await databases.deleteDocument(DATABASE_ID, TASKS_ID, taskId);
+
+    // delete notification about this task
+    const notifications = await databases.listDocuments(
+      DATABASE_ID,
+      NOTIFICATIONS_ID,
+      [Query.equal("taskId", taskId)],
+    );
+    if (notifications.total) {
+      await Promise.all(
+        notifications.documents.map((notification) =>
+          databases.deleteDocument(
+            DATABASE_ID,
+            NOTIFICATIONS_ID,
+            notification.$id,
+          ),
+        ),
+      );
+    }
 
     return c.json({ data: { $id: task.$id } });
   });

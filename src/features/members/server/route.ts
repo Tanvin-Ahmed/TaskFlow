@@ -163,7 +163,7 @@ const app = new Hono()
     await databases.createDocument(DATABASE_ID, NOTIFICATIONS_ID, ID.unique(), {
       workspaceId: workspace.$id,
       to: memberToDelete.userId,
-      message: `Admin remove ${memberToDelete.name} from this workspace.`,
+      message: `Admin remove you from ${workspace.name} workspace.`,
     });
 
     return c.json({ data: { $id: memberToDelete.$id } });

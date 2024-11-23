@@ -7,6 +7,7 @@ export type Notification = Models.Document & {
   to?: string;
   readAt?: Date;
   link?: string;
+  taskId?: string;
 };
 
 export type PopulatedNotification = Models.Document & {
@@ -19,6 +20,7 @@ export type PopulatedNotification = Models.Document & {
     $id: string;
     name: string;
   };
+  taskId?: string;
   to?: string;
   readAt?: Date;
   link?: string;
