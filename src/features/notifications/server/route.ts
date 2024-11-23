@@ -40,8 +40,8 @@ const app = new Hono().get("/", sessionMiddleware, async (c) => {
     [Query.equal("userId", user.$id)],
   );
   const workspaceIds = memberOfWorkspace.documents.map((m) => m.workspaceId);
-  let workspaces;
 
+  let workspaces;
   if (workspaceIds.length) {
     workspaces = await databases.listDocuments<Workspace>(
       DATABASE_ID,
@@ -75,7 +75,6 @@ const app = new Hono().get("/", sessionMiddleware, async (c) => {
   };
 
   // **** MAIN LOGIC TO FIND NOTIFICATIONS **** //
-
   // write required queries to get unseen notifications
   const orQueries = [Query.equal("to", user.$id)];
   if (userAttachedWith.projectIds.length) {
@@ -112,6 +111,17 @@ const app = new Hono().get("/", sessionMiddleware, async (c) => {
     NOTIFICATIONS_ID,
     QueriesForSeenNotification,
   );
+
+  // if no notifications are available
+  if (!unseenNotifications.total && !seenNotifications.total) {
+    return c.json({
+      data: {
+        unseenNotificationCount: 0,
+        totalNotificationCount: 0,
+        notifications: [],
+      },
+    });
+  }
 
   // populate workspace and project data in notifications
   const populatedNotifications = [

@@ -12,18 +12,20 @@ import { useUnreadInboxNotificationsCount } from "@liveblocks/react/suspense";
 import DocNotificationList from "@/features/live-block/components/doc-notification-list";
 import { cn } from "@/lib/utils";
 import useAppWrite from "@/hooks/use-app-write";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { DATABASE_ID, NOTIFICATIONS_ID } from "@/config";
 import useNotifications from "../api/use-notifications";
 import { useQueryClient } from "@tanstack/react-query";
 import { PopulatedNotification } from "../type";
+import { makeUnseenNotificationAsSeen } from "../server/actions";
 
 const Notification = () => {
   const queryClient = useQueryClient();
   const { count } = useUnreadInboxNotificationsCount();
   const { data: notifications, isLoading } = useNotifications();
-
   const { client } = useAppWrite();
+
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
 
   useEffect(() => {
     if (!client) return;
@@ -42,8 +44,37 @@ const Notification = () => {
     };
   }, [client, queryClient]);
 
+  const handlePopoverChange = (isOpen: boolean) => {
+    if (!isOpen && isPopoverOpen) {
+      // Popover was closed, update the notifications
+      updateNotificationsAsRead();
+    }
+    setIsPopoverOpen(isOpen);
+  };
+
+  const updateNotificationsAsRead = async () => {
+    try {
+      if (notifications) {
+        const unreadNotificationsId = notifications.notifications
+          .filter((notification) => !notification.readAt)
+          .map((notification) => notification.$id);
+
+        if (unreadNotificationsId && unreadNotificationsId.length > 0) {
+          const data = await makeUnseenNotificationAsSeen(
+            unreadNotificationsId,
+          );
+          if (data.success) {
+            queryClient.invalidateQueries({ queryKey: ["notifications"] });
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Failed to update notifications as read:", error);
+    }
+  };
+
   return (
-    <Popover>
+    <Popover onOpenChange={handlePopoverChange}>
       <PopoverTrigger asChild>
         <Button
           size={"icon"}

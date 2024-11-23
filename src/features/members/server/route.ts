@@ -159,9 +159,10 @@ const app = new Hono()
     //   finally delete the member
     await databases.deleteDocument(DATABASE_ID, MEMBERS_ID, memberId);
 
-    // notify all other members of the workspace
+    // notify this member
     await databases.createDocument(DATABASE_ID, NOTIFICATIONS_ID, ID.unique(), {
       workspaceId: workspace.$id,
+      to: memberToDelete.userId,
       message: `Admin remove ${memberToDelete.name} from this workspace.`,
     });
 
