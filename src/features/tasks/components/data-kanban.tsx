@@ -166,7 +166,7 @@ const DataKanban = ({ data, onChange, user }: Props) => {
 
       onChange(updatesPayload);
     },
-    [onChange],
+    [onChange, tasks, user.$id],
   );
 
   return (

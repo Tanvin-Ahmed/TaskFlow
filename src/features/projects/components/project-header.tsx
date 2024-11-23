@@ -27,13 +27,16 @@ import useProjectId from "../hooks/use-project-id";
 import { useState } from "react";
 import { getIsOwner } from "@/features/auth/server/queries";
 import useGetProject from "../api/use-get-project";
+import { useGetSubscription } from "@/features/pricing/api/use-get-subscription";
+import { Workspace } from "@/features/workspaces/types";
 
 interface Props {
   initialValues: Project;
   user: Models.User<Models.Preferences>;
+  workspace: Workspace;
 }
 
-const ProjectHeader = ({ initialValues, user }: Props) => {
+const ProjectHeader = ({ initialValues, user, workspace }: Props) => {
   const router = useRouter();
   const projectId = useProjectId();
   const { data, isLoading } = useGetProjects({
@@ -43,6 +46,10 @@ const ProjectHeader = ({ initialValues, user }: Props) => {
     projectId,
   });
   const { mutate, isPending } = useUpdateProject();
+  const { data: subscription, isLoading: isLoadingSubscription } =
+    useGetSubscription({
+      userId: workspace.userId,
+    });
 
   const [isLoadingCreateRoom, setIsLoadingCreateRoom] = useState(false);
 
@@ -65,6 +72,22 @@ const ProjectHeader = ({ initialValues, user }: Props) => {
 
       if (!isOwner && !isPermitted) {
         throw new Error("Not permitted to access the project documentation.");
+      }
+
+      // check is the owner of the workspace is pro or normal user
+      // normal user can't create documents
+      if (isOwner) {
+        if (subscription && !subscription.isSubscribed) {
+          router.push(`/pricing`);
+          return;
+        }
+      } else {
+        if (subscription && !subscription.isSubscribed) {
+          toast.error(
+            "Workspace owner is not a Pro user of our app to access the meeting feature.",
+          );
+          return;
+        }
       }
 
       if (initialValues?.isDocCreated) {
@@ -165,7 +188,9 @@ const ProjectHeader = ({ initialValues, user }: Props) => {
                 size={"sm"}
                 onClick={documentHandler}
                 className="flex w-full justify-start"
-                disabled={isPending || isLoadingCreateRoom}
+                disabled={
+                  isPending || isLoadingCreateRoom || isLoadingSubscription
+                }
               >
                 {isPending || isLoadingCreateRoom ? (
                   <>

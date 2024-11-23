@@ -9,7 +9,7 @@ interface Props {
 
 const NotificationList = ({ className, notifications }: Props) => {
   return (
-    <div className={cn("h-full w-full space-y-3", className)}>
+    <div className={cn("h-full w-full space-y-4", className)}>
       {notifications.length ? (
         notifications.map((notification) => (
           <NotificationCard

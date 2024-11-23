@@ -17,14 +17,16 @@ import { Notification, PopulatedNotification } from "../type";
 
 const getWorkspaceRequiredInfo = (workspace: Workspace) => {
   return {
-    $id: workspace.$id,
-    name: workspace.name,
+    $id: workspace?.$id,
+    name: workspace?.name,
+    imageUrl: workspace?.imageUrl,
   };
 };
 const getProjectRequiredInfo = (project: Project) => {
   return {
-    $id: project.$id,
-    name: project.name,
+    $id: project?.$id,
+    name: project?.name,
+    imageUrl: project?.imageUrl,
   };
 };
 
@@ -141,7 +143,8 @@ const app = new Hono().get("/", sessionMiddleware, async (c) => {
         (project) => project.$id === projectId,
       );
 
-      requiredProjectInfo = getProjectRequiredInfo(projectInfo!);
+      if (projectInfo)
+        requiredProjectInfo = getProjectRequiredInfo(projectInfo);
     }
 
     const populatedNotification = {

@@ -14,11 +14,13 @@ export type PopulatedNotification = Models.Document & {
   workspace: {
     $id: string;
     name: string;
+    imageUrl: string;
   };
   message: string;
   project?: {
     $id: string;
     name: string;
+    imageUrl: string;
   };
   taskId?: string;
   to?: string;

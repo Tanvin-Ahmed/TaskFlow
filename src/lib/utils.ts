@@ -116,3 +116,7 @@ export function getUserColor(userId: string) {
   const colorIndex = sum % brightColors.length;
   return brightColors[colorIndex];
 }
+
+export const getSubstring = (str: string, length: number): string => {
+  return str.length > length ? `${str.substring(0, length).trim()}...` : str;
+};

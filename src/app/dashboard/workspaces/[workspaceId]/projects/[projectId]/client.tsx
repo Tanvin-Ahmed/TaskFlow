@@ -8,6 +8,8 @@ import useGetProjectAnalytics from "@/features/projects/api/use-get-project-anal
 import ProjectHeader from "@/features/projects/components/project-header";
 import useProjectId from "@/features/projects/hooks/use-project-id";
 import TaskViewSwitcher from "@/features/tasks/components/task-view-switcher";
+import { useGetWorkspace } from "@/features/workspaces/api/use-get-workspace";
+import useWorkspaceId from "@/features/workspaces/hooks/use-workspace-id";
 import { Models } from "node-appwrite";
 
 interface Props {
@@ -16,13 +18,17 @@ interface Props {
 
 const ProjectIdClient = ({ user }: Props) => {
   const projectId = useProjectId();
+  const workspaceId = useWorkspaceId();
   const { data: project, isLoading: projectLoading } = useGetProject({
     projectId,
+  });
+  const { data: workspace, isLoading: isLoadingWorkspace } = useGetWorkspace({
+    workspaceId,
   });
   const { data: analytics, isLoading: analyticsLoading } =
     useGetProjectAnalytics({ projectId });
 
-  const isLoading = projectLoading || analyticsLoading;
+  const isLoading = projectLoading || analyticsLoading || isLoadingWorkspace;
   const error = !project;
 
   if (isLoading) {
@@ -35,7 +41,13 @@ const ProjectIdClient = ({ user }: Props) => {
 
   return (
     <section className="flex flex-col gap-y-4">
-      <ProjectHeader initialValues={project} user={user} />
+      {workspace ? (
+        <ProjectHeader
+          initialValues={project}
+          user={user}
+          workspace={workspace}
+        />
+      ) : null}
       {analytics ? <Analytics data={analytics} /> : null}
       <TaskViewSwitcher hideProjectFilter user={user} />
     </section>
