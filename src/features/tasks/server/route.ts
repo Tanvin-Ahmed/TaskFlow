@@ -397,6 +397,7 @@ const app = new Hono()
             projectId,
             to: assigneeId,
             message: `${user.name} assigned you to a task, named ${name} in ${project.name} project`,
+            readAt: null,
           },
         );
       }
