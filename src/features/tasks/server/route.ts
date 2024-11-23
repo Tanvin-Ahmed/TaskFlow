@@ -396,8 +396,21 @@ const app = new Hono()
           {
             projectId,
             to: assigneeId,
-            message: `${user.name} assigned you to a task, named ${name} in ${project.name} project`,
+            message: `${user.name} assigned you to a task named ${name} in ${project.name} project`,
             readAt: null,
+          },
+        );
+
+        // notify old assignee that he was removed from this task
+        await databases.createDocument(
+          DATABASE_ID,
+          NOTIFICATIONS_ID,
+          ID.unique(),
+          {
+            workspaceId: existingTask.workspaceId,
+            projectId,
+            to: existingTask.assigneeId,
+            message: `${user.name} removed you from a task named ${name} in ${project.name} project`,
           },
         );
       }

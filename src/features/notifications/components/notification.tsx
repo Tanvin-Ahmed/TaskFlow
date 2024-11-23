@@ -36,6 +36,9 @@ const Notification = () => {
         if (response.events.some((event) => event.includes(".create"))) {
           queryClient.invalidateQueries({ queryKey: ["notifications"] });
         }
+        if (response.events.some((event) => event.includes(".update"))) {
+          queryClient.invalidateQueries({ queryKey: ["notifications"] });
+        }
       },
     );
 
