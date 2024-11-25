@@ -10,6 +10,7 @@ import { Project } from "../types";
 import { endOfMonth, startOfMonth, subMonths } from "date-fns";
 import { Task, TaskStatus } from "@/features/tasks/types";
 import { createAdminClient } from "@/lib/appwrite";
+import { getIsOwner } from "@/features/auth/server/queries";
 
 const app = new Hono()
   .get(
@@ -298,7 +299,22 @@ const app = new Hono()
         userId: user.$id,
       });
       if (!workspaceMember) {
-        return c.json({ error: "Unauthorized" }, 401);
+        return c.json(
+          {
+            error: "Unauthorized. Only workspace owner can create new project.",
+          },
+          401,
+        );
+      }
+
+      const isOwner = getIsOwner(user.$id, workspaceId);
+      if (!isOwner) {
+        return c.json(
+          {
+            error: "Unauthorized. Only workspace owner can create new project.",
+          },
+          401,
+        );
       }
 
       let uploadedImageUrl: string | undefined;
@@ -370,6 +386,16 @@ const app = new Hono()
 
       if (!member) {
         return c.json({ error: "Unauthorized" }, 401);
+      }
+
+      const isOwner = getIsOwner(user.$id, existingProject.workspaceId);
+      if (!isOwner) {
+        return c.json(
+          {
+            error: "Unauthorized. Only workspace owner can create new project.",
+          },
+          401,
+        );
       }
 
       let uploadedImageUrl: string | undefined;

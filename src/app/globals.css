@@ -396,3 +396,11 @@ body {
 .dark .lb-inbox-notification-title .lb-user {
   @apply !text-white;
 }
+
+/* style meeting room */
+.str-video__call-controls {
+  @apply !flex-wrap;
+}
+.str-video__participant-details__name {
+  @apply text-white;
+}

@@ -1,5 +1,4 @@
 "use client";
-
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -68,12 +67,27 @@ const MeetingRoom = () => {
         </div>
       </div>
 
-      <div className="fixed bottom-0 flex w-full items-center gap-5 overflow-auto md:justify-center">
+      <div className="fixed bottom-0 z-50 flex w-full flex-wrap items-center gap-5 md:justify-center">
+        <CallControls
+          onLeave={() => {
+            router.push(`/workspaces/${workspaceId}/meeting`);
+          }}
+        />
+        <CallStatsButton />
+
+        <Button
+          className="cursor-pointer rounded-full bg-[#1f262e] p-2 text-white hover:bg-[#323B44] focus:bg-blue-600"
+          size={"icon"}
+          variant={"secondary"}
+          onClick={() => setShowParticipants((state) => !state)}
+        >
+          <UsersIcon size={20} />
+        </Button>
         <DropdownMenu>
           <div className="flex items-center">
             <DropdownMenuTrigger asChild>
               <Button
-                className="flex cursor-pointer items-center justify-center rounded-full p-2"
+                className="flex cursor-pointer items-center justify-center rounded-full bg-[#1f262e] p-2 text-white hover:bg-[#323B44] focus:bg-blue-600"
                 size={"icon"}
                 variant={"secondary"}
               >
@@ -99,22 +113,6 @@ const MeetingRoom = () => {
             ))}
           </DropdownMenuContent>
         </DropdownMenu>
-
-        <CallControls
-          onLeave={() => {
-            router.push(`/workspaces/${workspaceId}/meeting`);
-          }}
-        />
-        <CallStatsButton />
-
-        <Button
-          className="cursor-pointer rounded-full p-2"
-          size={"icon"}
-          variant={"secondary"}
-          onClick={() => setShowParticipants((state) => !state)}
-        >
-          <UsersIcon size={20} />
-        </Button>
 
         {!isPersonalRoom && <EndCallButton />}
       </div>
