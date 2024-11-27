@@ -33,10 +33,11 @@ const Notification = () => {
     const unsubscribe = client.subscribe(
       `databases.${DATABASE_ID}.collections.${NOTIFICATIONS_ID}.documents`,
       (response) => {
-        if (response.events.some((event) => event.includes(".create"))) {
-          queryClient.invalidateQueries({ queryKey: ["notifications"] });
-        }
-        if (response.events.some((event) => event.includes(".update"))) {
+        if (
+          response.events.some((event) => event.includes(".create")) ||
+          response.events.some((event) => event.includes(".update")) ||
+          response.events.some((event) => event.includes(".delete"))
+        ) {
           queryClient.invalidateQueries({ queryKey: ["notifications"] });
         }
       },

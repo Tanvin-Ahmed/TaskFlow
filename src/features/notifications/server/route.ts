@@ -78,44 +78,76 @@ const app = new Hono().get("/", sessionMiddleware, async (c) => {
 
   // **** MAIN LOGIC TO FIND NOTIFICATIONS **** //
   // write required queries to get unseen notifications
+  // get notifications where to = userId
+  // const notificationsToMe = await databases.listDocuments<Notification>(
+  //   DATABASE_ID,
+  //   NOTIFICATIONS_ID,
+  //   [
+  //     Query.or([
+  //       Query.equal("to", user.$id),
+  //       Query.and([
+  //         Query.isNull("to"),
+  //         Query.contains("projectId", userAttachedWith.projectIds),
+  //       ]),
+  //       Query.and([
+  //         Query.isNull("to"),
+  //         Query.isNull("projectId"),
+  //         Query.contains("workspaceId", userAttachedWith.workspaceIds),
+  //       ]),
+  //     ]),
+  //     Query.orderDesc("$updatedAt"),
+  //   ],
+  // );
+  // console.log("notificationsToMe: ", notificationsToMe);
+  // get notifications where to = null and projectId = userAttachedWith.projectIds
+  // const notificationsOnlyAssigneeOfProjects =
+  //   await databases.listDocuments<Notification>(DATABASE_ID, NOTIFICATIONS_ID, [
+  //     Query.isNull("to"),
+  //     Query.contains("projectId", userAttachedWith.projectIds),
+  //     Query.orderDesc("$updatedAt"),
+  //   ]);
+  // console.log(
+  //   "notificationsOnlyAssigneeOfProjects: ",
+  //   notificationsOnlyAssigneeOfProjects,
+  // );
+
+  // get notifications where to = null and projectId = null and workspaceId = userAttachedWith.workspaceIds
+
   const orQueries = [Query.equal("to", user.$id)];
   if (userAttachedWith.projectIds.length) {
-    orQueries.push(Query.contains("projectId", userAttachedWith.projectIds));
+    orQueries.push(
+      Query.and([
+        Query.isNull("to"),
+        Query.contains("projectId", userAttachedWith.projectIds),
+      ]),
+    );
   }
   if (userAttachedWith.workspaceIds.length) {
     orQueries.push(
-      Query.contains("workspaceId", userAttachedWith.workspaceIds),
+      Query.and([
+        Query.isNull("to"),
+        Query.isNull("projectId"),
+        Query.contains("workspaceId", userAttachedWith.workspaceIds),
+      ]),
     );
   }
 
-  const QueriesForUnseenNotification = [Query.isNull("readAt")];
+  const QueriesForNotification = [Query.orderDesc("$createdAt")];
   if (orQueries.length > 1) {
-    QueriesForUnseenNotification.push(Query.or(orQueries));
+    QueriesForNotification.push(Query.or(orQueries));
   } else {
-    QueriesForUnseenNotification.push(...orQueries);
-  }
-
-  const QueriesForSeenNotification = [Query.isNotNull("readAt")];
-  if (orQueries.length > 1) {
-    QueriesForSeenNotification.push(Query.or(orQueries));
-  } else {
-    QueriesForSeenNotification.push(...orQueries);
+    QueriesForNotification.push(orQueries[0]);
   }
 
   // get notifications
-  const unseenNotifications = await databases.listDocuments<Notification>(
+  const notifications = await databases.listDocuments<Notification>(
     DATABASE_ID,
     NOTIFICATIONS_ID,
-    QueriesForUnseenNotification,
-  );
-  const seenNotifications = await databases.listDocuments<Notification>(
-    DATABASE_ID,
-    NOTIFICATIONS_ID,
-    QueriesForSeenNotification,
+    QueriesForNotification,
   );
 
   // if no notifications are available
-  if (!unseenNotifications.total && !seenNotifications.total) {
+  if (!notifications.total) {
     return c.json({
       data: {
         unseenNotificationCount: 0,
@@ -126,10 +158,7 @@ const app = new Hono().get("/", sessionMiddleware, async (c) => {
   }
 
   // populate workspace and project data in notifications
-  const populatedNotifications = [
-    ...unseenNotifications.documents,
-    ...seenNotifications.documents,
-  ].map((notification) => {
+  const populatedNotifications = notifications.documents.map((notification) => {
     const { workspaceId, projectId, ...rest } = notification;
 
     const workspaceInfo = userAttachedWith.workspaces.find(
@@ -158,7 +187,9 @@ const app = new Hono().get("/", sessionMiddleware, async (c) => {
 
   return c.json({
     data: {
-      unseenNotificationCount: unseenNotifications.total,
+      unseenNotificationCount: populatedNotifications.filter(
+        (notify) => !notify.readAt,
+      ).length,
       totalNotificationCount: populatedNotifications.length,
       notifications: populatedNotifications as PopulatedNotification[],
     },

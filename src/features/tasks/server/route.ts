@@ -374,8 +374,12 @@ const app = new Hono()
         },
       );
 
-      // if change the assigneeId then notify the new assignee
-      if (assigneeId && existingTask.assigneeId !== assigneeId) {
+      // if change the assigneeId and new assingee is not me then notify the new assignee
+      if (
+        assigneeId &&
+        existingTask.assigneeId !== assigneeId &&
+        assigneeId !== user.$id
+      ) {
         const project = await databases.getDocument(
           DATABASE_ID,
           PROJECTS_ID,
@@ -389,15 +393,22 @@ const app = new Hono()
         );
         const notification = notificationArray.documents[0];
 
-        await databases.updateDocument(
+        await databases.deleteDocument(
           DATABASE_ID,
           NOTIFICATIONS_ID,
           notification.$id,
+        );
+
+        // notify new assignee that he is now assigned for this task
+        await databases.createDocument(
+          DATABASE_ID,
+          NOTIFICATIONS_ID,
+          ID.unique(),
           {
+            workspaceId: existingTask.workspaceId,
             projectId,
             to: assigneeId,
             message: `${user.name} assigned you to a task named ${name} in ${project.name} project`,
-            readAt: null,
           },
         );
 

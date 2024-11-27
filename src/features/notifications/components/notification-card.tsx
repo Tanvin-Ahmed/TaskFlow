@@ -28,7 +28,7 @@ const NotificationCard = ({ notification }: Props) => {
           </p>
         </div>
         <div className="flex items-center gap-1 text-nowrap text-xs text-gray-700 dark:text-indigo-200">
-          <TimeAgo date={notification.$updatedAt} />{" "}
+          <TimeAgo date={notification.$createdAt} />{" "}
           {notification.readAt ? null : (
             <span className="relative block size-2 rounded-full bg-primary">
               <span className="absolute inset-0 z-20 size-2 animate-ping rounded-full bg-primary" />
