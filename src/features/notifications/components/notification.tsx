@@ -18,8 +18,10 @@ import useNotifications from "../api/use-notifications";
 import { useQueryClient } from "@tanstack/react-query";
 import { PopulatedNotification } from "../type";
 import { makeUnseenNotificationAsSeen } from "../server/actions";
+import { useCurrent } from "@/features/auth/api/use-current";
 
 const Notification = () => {
+  const { data: user, isLoading: isLoadingUser } = useCurrent();
   const queryClient = useQueryClient();
   const { count } = useUnreadInboxNotificationsCount();
   const { data: notifications, isLoading } = useNotifications();
@@ -58,9 +60,9 @@ const Notification = () => {
 
   const updateNotificationsAsRead = async () => {
     try {
-      if (notifications) {
+      if (notifications && user) {
         const unreadNotificationsId = notifications.notifications
-          .filter((notification) => !notification.readAt)
+          .filter((notification) => !notification.seenBy?.includes(user.$id))
           .map((notification) => notification.$id);
 
         if (unreadNotificationsId && unreadNotificationsId.length > 0) {
@@ -84,10 +86,10 @@ const Notification = () => {
           size={"icon"}
           variant={"outline"}
           className={cn("relative rounded-full", {
-            "animate-pulse": isLoading,
+            "animate-pulse": isLoading || isLoadingUser,
           })}
         >
-          {isLoading ? (
+          {isLoading || isLoadingUser ? (
             <div className="size-4" />
           ) : (
             <>

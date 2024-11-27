@@ -5,7 +5,7 @@ export type Notification = Models.Document & {
   message: string;
   projectId?: string;
   to?: string;
-  readAt?: Date;
+  seenBy?: string;
   link?: string;
   taskId?: string;
 };
@@ -24,6 +24,6 @@ export type PopulatedNotification = Models.Document & {
   };
   taskId?: string;
   to?: string;
-  readAt?: Date;
+  seenBy?: string[];
   link?: string;
 };

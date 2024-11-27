@@ -78,40 +78,6 @@ const app = new Hono().get("/", sessionMiddleware, async (c) => {
 
   // **** MAIN LOGIC TO FIND NOTIFICATIONS **** //
   // write required queries to get unseen notifications
-  // get notifications where to = userId
-  // const notificationsToMe = await databases.listDocuments<Notification>(
-  //   DATABASE_ID,
-  //   NOTIFICATIONS_ID,
-  //   [
-  //     Query.or([
-  //       Query.equal("to", user.$id),
-  //       Query.and([
-  //         Query.isNull("to"),
-  //         Query.contains("projectId", userAttachedWith.projectIds),
-  //       ]),
-  //       Query.and([
-  //         Query.isNull("to"),
-  //         Query.isNull("projectId"),
-  //         Query.contains("workspaceId", userAttachedWith.workspaceIds),
-  //       ]),
-  //     ]),
-  //     Query.orderDesc("$updatedAt"),
-  //   ],
-  // );
-  // console.log("notificationsToMe: ", notificationsToMe);
-  // get notifications where to = null and projectId = userAttachedWith.projectIds
-  // const notificationsOnlyAssigneeOfProjects =
-  //   await databases.listDocuments<Notification>(DATABASE_ID, NOTIFICATIONS_ID, [
-  //     Query.isNull("to"),
-  //     Query.contains("projectId", userAttachedWith.projectIds),
-  //     Query.orderDesc("$updatedAt"),
-  //   ]);
-  // console.log(
-  //   "notificationsOnlyAssigneeOfProjects: ",
-  //   notificationsOnlyAssigneeOfProjects,
-  // );
-
-  // get notifications where to = null and projectId = null and workspaceId = userAttachedWith.workspaceIds
 
   const orQueries = [Query.equal("to", user.$id)];
   if (userAttachedWith.projectIds.length) {
@@ -159,7 +125,7 @@ const app = new Hono().get("/", sessionMiddleware, async (c) => {
 
   // populate workspace and project data in notifications
   const populatedNotifications = notifications.documents.map((notification) => {
-    const { workspaceId, projectId, ...rest } = notification;
+    const { workspaceId, projectId, seenBy, ...rest } = notification;
 
     const workspaceInfo = userAttachedWith.workspaces.find(
       (workspace) => workspace.$id === workspaceId,
@@ -178,6 +144,7 @@ const app = new Hono().get("/", sessionMiddleware, async (c) => {
 
     const populatedNotification = {
       ...rest,
+      seenBy: seenBy ? (JSON.parse(seenBy.trim()) as string[]) : [],
       workspace: requiredWorkspaceInfo,
       project: requiredProjectInfo,
     };
@@ -188,7 +155,7 @@ const app = new Hono().get("/", sessionMiddleware, async (c) => {
   return c.json({
     data: {
       unseenNotificationCount: populatedNotifications.filter(
-        (notify) => !notify.readAt,
+        (notify) => !notify.seenBy.includes(user.$id),
       ).length,
       totalNotificationCount: populatedNotifications.length,
       notifications: populatedNotifications as PopulatedNotification[],

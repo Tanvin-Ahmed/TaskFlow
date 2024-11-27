@@ -5,12 +5,15 @@ import { FiArrowUpRight } from "react-icons/fi";
 import Link from "next/link";
 import WorkspaceAvatar from "@/features/workspaces/components/workspace-avatar";
 import { getSubstring } from "@/lib/utils";
+import { useCurrent } from "@/features/auth/api/use-current";
 
 interface Props {
   notification: PopulatedNotification;
 }
 
 const NotificationCard = ({ notification }: Props) => {
+  const { data: user } = useCurrent();
+
   return (
     <div className="space-y-1 overflow-hidden">
       <div className="flex items-center justify-between gap-3">
@@ -29,7 +32,7 @@ const NotificationCard = ({ notification }: Props) => {
         </div>
         <div className="flex items-center gap-1 text-nowrap text-xs text-gray-700 dark:text-indigo-200">
           <TimeAgo date={notification.$createdAt} />{" "}
-          {notification.readAt ? null : (
+          {user && notification.seenBy?.includes(user.$id) ? null : (
             <span className="relative block size-2 rounded-full bg-primary">
               <span className="absolute inset-0 z-20 size-2 animate-ping rounded-full bg-primary" />
             </span>

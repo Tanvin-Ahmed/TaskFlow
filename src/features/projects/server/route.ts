@@ -1,4 +1,10 @@
-import { DATABASE_ID, IMAGES_BUCKET_ID, PROJECTS_ID, TASKS_ID } from "@/config";
+import {
+  DATABASE_ID,
+  IMAGES_BUCKET_ID,
+  NOTIFICATIONS_ID,
+  PROJECTS_ID,
+  TASKS_ID,
+} from "@/config";
 import { getMember } from "@/features/members/utils";
 import { sessionMiddleware } from "@/lib/session-middleware";
 import { zValidator } from "@hono/zod-validator";
@@ -11,6 +17,7 @@ import { endOfMonth, startOfMonth, subMonths } from "date-fns";
 import { Task, TaskStatus } from "@/features/tasks/types";
 import { createAdminClient } from "@/lib/appwrite";
 import { getIsOwner } from "@/features/auth/server/queries";
+import { getAssignees } from "./action";
 
 const app = new Hono()
   .get(
@@ -478,6 +485,25 @@ const app = new Hono()
       await Promise.all(deletePromises);
     }
 
+    // delete all notifications related to this project
+    const allNotificationsOfProject = await databases.listDocuments(
+      DATABASE_ID,
+      NOTIFICATIONS_ID,
+      [Query.equal("projectId", projectId)],
+    );
+
+    if (allNotificationsOfProject.total) {
+      await Promise.all(
+        allNotificationsOfProject.documents.map((notification) =>
+          databases.deleteDocument(
+            DATABASE_ID,
+            NOTIFICATIONS_ID,
+            notification.$id,
+          ),
+        ),
+      );
+    }
+
     // finally delete the project
     const project = await databases.getDocument<Project>(
       DATABASE_ID,
@@ -490,6 +516,25 @@ const app = new Hono()
     }
 
     await databases.deleteDocument(DATABASE_ID, PROJECTS_ID, projectId);
+
+    // notify all assignees of this project
+    const assignees = await getAssignees(projectId);
+
+    const queries = [Query.equal("projectId", projectId)];
+    if (assignees.length) {
+      const assigneesId = assignees.map((assignee) => assignee.$id);
+      queries.push(Query.contains("to", assigneesId));
+
+      await Promise.all(
+        assigneesId.map((assigneeId) =>
+          databases.createDocument(DATABASE_ID, NOTIFICATIONS_ID, ID.unique(), {
+            workspaceId: existingProject.workspaceId,
+            to: assigneeId,
+            message: `${existingProject.name} is deleted by ${user.name}.`,
+          }),
+        ),
+      );
+    }
 
     return c.json({ data: { $id: projectId } }, 200);
   });
