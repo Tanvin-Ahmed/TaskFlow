@@ -9,6 +9,7 @@ interface Props {
   status?: TaskStatus | undefined;
   dueDate?: string | undefined;
   search?: string | undefined;
+  limit?: number | undefined;
 }
 
 const useGetTasks = ({
@@ -18,6 +19,7 @@ const useGetTasks = ({
   status,
   search,
   dueDate,
+  limit,
 }: Props) => {
   const query = useQuery({
     queryKey: [
@@ -31,13 +33,22 @@ const useGetTasks = ({
     ],
     queryFn: async () => {
       const response = await client.api.tasks.$get({
-        query: { workspaceId, projectId, assigneeId, status, search, dueDate },
+        query: {
+          workspaceId,
+          projectId,
+          assigneeId,
+          status,
+          search,
+          dueDate,
+          limit: limit ? String(limit) : undefined,
+        },
       });
 
       if (!response.ok) {
         const errorData = (await response.json()) as {
           error: string;
         };
+        console.log(errorData);
         throw new Error(errorData.error || "Tasks not found!");
       }
 

@@ -23,12 +23,15 @@ const app = new Hono()
   .get(
     "/",
     sessionMiddleware,
-    zValidator("query", z.object({ workspaceId: z.string() })),
+    zValidator(
+      "query",
+      z.object({ workspaceId: z.string(), limit: z.string().nullish() }),
+    ),
     async (c) => {
       const user = c.get("user");
       const databases = c.get("databases");
 
-      const { workspaceId } = c.req.valid("query");
+      const { workspaceId, limit } = c.req.valid("query");
 
       const member = await getMember({
         databases,
@@ -40,13 +43,17 @@ const app = new Hono()
         return c.json({ error: "Unauthorized" }, 401);
       }
 
+      const queries = [
+        Query.equal("workspaceId", workspaceId),
+        Query.orderDesc("$createdAt"),
+      ];
+
+      if (limit) queries.push(Query.limit(Number(limit)));
+
       const projects = await databases.listDocuments<Project>(
         DATABASE_ID,
         PROJECTS_ID,
-        [
-          Query.equal("workspaceId", workspaceId),
-          Query.orderDesc("$createdAt"),
-        ],
+        queries,
       );
 
       return c.json({ data: projects });
@@ -473,6 +480,17 @@ const app = new Hono()
       return c.json({ error: "Unauthorized" }, 401);
     }
 
+    // check is owner
+    const isOwner = getIsOwner(user.$id, existingProject.workspaceId);
+
+    if (!isOwner) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
+
+    const assignees = await getAssignees(projectId);
+
+    // TODO: handle delete doc if created
+
     // delete all tasks of the project
     const tasks = await databases.listDocuments<Task>(DATABASE_ID, TASKS_ID, [
       Query.equal("projectId", projectId),
@@ -505,23 +523,14 @@ const app = new Hono()
     }
 
     // finally delete the project
-    const project = await databases.getDocument<Project>(
-      DATABASE_ID,
-      PROJECTS_ID,
-      projectId,
-    );
-
-    if (project?.imageId) {
-      await storage.deleteFile(IMAGES_BUCKET_ID, project.imageId);
+    if (existingProject?.imageId) {
+      await storage.deleteFile(IMAGES_BUCKET_ID, existingProject.imageId);
     }
-
     await databases.deleteDocument(DATABASE_ID, PROJECTS_ID, projectId);
 
     // notify all assignees of this project
-    const assignees = await getAssignees(projectId);
-
     const queries = [Query.equal("projectId", projectId)];
-    if (assignees.length) {
+    if (assignees.length > 0) {
       const assigneesId = assignees.map((assignee) => assignee.$id);
       queries.push(Query.contains("to", assigneesId));
 
@@ -536,7 +545,10 @@ const app = new Hono()
       );
     }
 
-    return c.json({ data: { $id: projectId } }, 200);
+    return c.json(
+      { data: { $id: projectId, workspaceId: existingProject.workspaceId } },
+      200,
+    );
   });
 
 export default app;

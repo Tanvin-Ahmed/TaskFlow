@@ -32,6 +32,11 @@ export const getAssignees = async (projectId: string) => {
   const tasks = await databases.listDocuments<Task>(DATABASE_ID, TASKS_ID, [
     Query.equal("projectId", projectId),
   ]);
+
+  if (!tasks.total) {
+    return [];
+  }
+
   const assigneeIds = Array.from(
     new Set(tasks.documents.map((doc) => doc.assigneeId)),
   );

@@ -29,12 +29,15 @@ const WorkspaceIdClient = ({ user }: Props) => {
     useGetWorkspaceAnalytics({ workspaceId });
   const { data: tasks, isLoading: isLoadingTasks } = useGetTasks({
     workspaceId,
+    limit: 3,
   });
   const { data: projects, isLoading: isLoadingProjects } = useGetProjects({
     workspaceId,
+    limit: 3,
   });
   const { data: members, isLoading: isLoadingMembers } = useGetMembers({
     workspaceId,
+    limit: 3,
   });
   const { data: isOwner, isLoading: isLoadingIsOwner } = useGetUserIsOwner({
     workspaceId,

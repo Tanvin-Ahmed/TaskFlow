@@ -2,6 +2,7 @@ import { toast } from "sonner";
 import { client } from "@/lib/rpc";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { InferRequestType, InferResponseType } from "hono";
+import { useRouter } from "next/navigation";
 
 type ResponseType = InferResponseType<
   (typeof client.api.projects)[":projectId"]["$delete"],
@@ -12,6 +13,7 @@ type RequestType = InferRequestType<
 >;
 
 export const useDeleteProject = () => {
+  const router = useRouter();
   const queryClient = useQueryClient();
 
   const mutation = useMutation<ResponseType, Error, RequestType>({
@@ -20,7 +22,13 @@ export const useDeleteProject = () => {
         param,
       });
 
-      if (!res.ok) throw new Error("Failed to delete project");
+      if (!res.ok) {
+        const errorData = (await res.json()) as {
+          error: string;
+        };
+        console.log(errorData);
+        throw new Error(errorData?.error || "Failed to delete the project!");
+      }
 
       return await res.json();
     },
@@ -28,9 +36,11 @@ export const useDeleteProject = () => {
       toast.success("Project deleted successfully!");
       queryClient.invalidateQueries({ queryKey: ["projects"] });
       queryClient.invalidateQueries({ queryKey: ["project", data.$id] });
+
+      router.push(`/dashboard/workspaces/${data.workspaceId}`);
     },
-    onError: () => {
-      toast.error("Failed to delete project!");
+    onError: (error) => {
+      toast.error(error.message);
     },
   });
 

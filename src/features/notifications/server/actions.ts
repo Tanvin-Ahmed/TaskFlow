@@ -18,20 +18,24 @@ export const makeUnseenNotificationAsSeen = async (
   );
 
   await Promise.all(
-    notifications.documents.map((notification) =>
-      databases.updateDocument(
+    notifications.documents.map((notification) => {
+      let sendBy = [];
+      if (notification.seenBy) {
+        sendBy = JSON.parse(notification.seenBy) as string[];
+        sendBy.push(user.$id);
+      } else {
+        sendBy.push(user.$id);
+      }
+
+      return databases.updateDocument(
         DATABASE_ID,
         NOTIFICATIONS_ID,
         notification.$id,
         {
-          seenBy: notification.seenBy
-            ? JSON.stringify(
-                (JSON.parse(notification.seenBy) as string[]).push(user.$id),
-              )
-            : JSON.stringify([user.$id]),
+          seenBy: JSON.stringify(sendBy),
         },
-      ),
-    ),
+      );
+    }),
   );
 
   return { success: true };

@@ -3,14 +3,15 @@ import { useQuery } from "@tanstack/react-query";
 
 interface Props {
   workspaceId: string;
+  limit?: number;
 }
 
-const useGetProjects = ({ workspaceId }: Props) => {
+const useGetProjects = ({ workspaceId, limit }: Props) => {
   const query = useQuery({
     queryKey: ["projects", workspaceId],
     queryFn: async () => {
       const response = await client.api.projects.$get({
-        query: { workspaceId },
+        query: { workspaceId, limit: limit ? String(limit) : undefined },
       });
 
       if (!response.ok) {

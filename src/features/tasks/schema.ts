@@ -20,6 +20,7 @@ export const getTaskSchema = z.object({
   status: z.nativeEnum(TaskStatus).nullish(),
   search: z.string().nullish(),
   dueDate: z.string().nullish(),
+  limit: z.string().nullish(),
 });
 
 export const BulkUpdateTaskReqSchema = z.object({

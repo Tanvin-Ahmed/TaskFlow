@@ -155,7 +155,7 @@ const app = new Hono().get("/", sessionMiddleware, async (c) => {
   return c.json({
     data: {
       unseenNotificationCount: populatedNotifications.filter(
-        (notify) => !notify.seenBy.includes(user.$id),
+        (notify) => !notify?.seenBy?.includes(user.$id),
       ).length,
       totalNotificationCount: populatedNotifications.length,
       notifications: populatedNotifications as PopulatedNotification[],

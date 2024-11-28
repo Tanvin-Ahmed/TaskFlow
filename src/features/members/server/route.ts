@@ -14,17 +14,21 @@ import {
 import { ID, Query } from "node-appwrite";
 import { Member, MemberRole } from "../types";
 import { Workspace } from "@/features/workspaces/types";
+import { getIsOwner } from "@/features/auth/server/queries";
 
 const app = new Hono()
   .get(
     "/",
     sessionMiddleware,
-    zValidator("query", z.object({ workspaceId: z.string() })),
+    zValidator(
+      "query",
+      z.object({ workspaceId: z.string(), limit: z.string().nullish() }),
+    ),
     async (c) => {
       const { users } = await createAdminClient();
       const databases = c.get("databases");
       const user = c.get("user");
-      const { workspaceId } = c.req.valid("query");
+      const { workspaceId, limit } = c.req.valid("query");
 
       const member = await getMember({
         databases,
@@ -36,10 +40,13 @@ const app = new Hono()
         return c.json({ error: "Unauthorized" }, 401);
       }
 
+      const queries = [Query.equal("workspaceId", workspaceId)];
+      if (limit) queries.push(Query.limit(Number(limit)));
+
       const members = await databases.listDocuments<Member>(
         DATABASE_ID,
         MEMBERS_ID,
-        [Query.equal("workspaceId", workspaceId)],
+        queries,
       );
 
       const populatedMembers = await Promise.all(
@@ -206,7 +213,8 @@ const app = new Hono()
         return c.json({ error: "Unauthorized to access" }, 401);
       }
 
-      if (member.role !== MemberRole.ADMIN) {
+      const isOwner = await getIsOwner(user.$id, memberToUpdate.workspaceId);
+      if (!isOwner) {
         return c.json({ error: "Unauthorized to update" }, 401);
       }
 
@@ -231,6 +239,22 @@ const app = new Hono()
       await databases.updateDocument(DATABASE_ID, MEMBERS_ID, memberId, {
         role,
       });
+
+      // notify the user
+      await databases.createDocument(
+        DATABASE_ID,
+        NOTIFICATIONS_ID,
+        ID.unique(),
+        {
+          workspaceId: workspace.$id,
+          message:
+            role === MemberRole.ADMIN
+              ? `${workspace.name} workspace owner make you an admin of this workspace.`
+              : `${workspace.name} workspace owner downgrade you to the general member of this workspace.`,
+          to: memberToUpdate.userId,
+          link: `/workspaces/${workspace.$id}/members`,
+        },
+      );
 
       return c.json({ data: { $id: memberToUpdate.$id } });
     },
