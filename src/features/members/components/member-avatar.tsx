@@ -23,7 +23,7 @@ const MemberAvatar = ({ name, className, fallbackClassName, style }: Props) => {
           fallbackClassName,
         )}
       >
-        {name[0].toUpperCase()}
+        {name[0]?.toUpperCase()}
       </AvatarFallback>
     </Avatar>
   );

@@ -22,7 +22,7 @@ export const snakeCaseToTitleCase = (str: string) => {
   return str
     .toLowerCase()
     .replace(/_/g, " ")
-    .replace(/\b\w/g, (char) => char.toUpperCase());
+    .replace(/\b\w/g, (char) => char?.toUpperCase());
 };
 
 export const parseStringify = (value: any) => JSON.parse(JSON.stringify(value));

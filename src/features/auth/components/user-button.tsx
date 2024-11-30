@@ -27,8 +27,8 @@ const UserButton = () => {
   if (!user) return null;
 
   const avatarFallback = user?.name
-    ? user.name.charAt(0).toUpperCase()
-    : (user.email.charAt(0).toUpperCase() ?? "U");
+    ? user.name.charAt(0)?.toUpperCase()
+    : (user.email.charAt(0)?.toUpperCase() ?? "U");
 
   return (
     <DropdownMenu modal={false}>
