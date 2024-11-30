@@ -18,6 +18,7 @@ import { Task, TaskStatus } from "@/features/tasks/types";
 import { createAdminClient } from "@/lib/appwrite";
 import { getIsOwner } from "@/features/auth/server/queries";
 import { getAssignees } from "./action";
+import { liveblocks } from "@/features/live-block/server/route";
 
 const app = new Hono()
   .get(
@@ -489,7 +490,10 @@ const app = new Hono()
 
     const assignees = await getAssignees(projectId);
 
-    // TODO: handle delete doc if created
+    // handle delete doc if created
+    if (Boolean(existingProject.isDocCreated)) {
+      await liveblocks.deleteRoom(projectId);
+    }
 
     // delete all tasks of the project
     const tasks = await databases.listDocuments<Task>(DATABASE_ID, TASKS_ID, [
