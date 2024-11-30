@@ -15,6 +15,8 @@ import { Button } from "@/components/ui/button";
 import { MoreVerticalIcon } from "lucide-react";
 import useConfirm from "@/hooks/use-confirm";
 import { useDeleteMember } from "../api/use-delete-member";
+import { useGetUserIsOwner } from "@/features/workspaces/api/use-get-user-isOwner";
+import useWorkspaceId from "@/features/workspaces/hooks/use-workspace-id";
 
 export const AdminSwitcher = ({ data }: { data: Row<Member> }) => {
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
@@ -50,7 +52,7 @@ export const AdminSwitcher = ({ data }: { data: Row<Member> }) => {
   };
 
   return (
-    <div className="flex items-center justify-center">
+    <div className="flex items-center">
       <Switch
         checked={isAdmin}
         onCheckedChange={(e) => handleCheckedChange(e)}
@@ -63,6 +65,8 @@ export const MemberTableAction = ({ data }: { data: Row<Member> }) => {
   const name = data.original["name"] as string;
   const $id = data.original["$id"] as string;
 
+  const workspaceId = useWorkspaceId();
+  const { data: isOwner } = useGetUserIsOwner({ workspaceId });
   const { mutate: deleteMember, isPending: isDeletingMember } =
     useDeleteMember();
   const { confirm, ConfirmationDialog } = useConfirm(
@@ -77,6 +81,8 @@ export const MemberTableAction = ({ data }: { data: Row<Member> }) => {
 
     deleteMember({ param: { memberId } });
   };
+
+  if (!isOwner) return null;
 
   return (
     <>

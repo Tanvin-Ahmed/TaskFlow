@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 
 interface Props {
   workspaceId: string;
-  userId: string;
+  userId?: string;
 }
 
 export const useGetUserIsOwner = ({ workspaceId, userId }: Props) => {
