@@ -2,7 +2,7 @@
 
 import { DATABASE_ID, NOTIFICATIONS_ID } from "@/config";
 import { createSessionClient } from "@/lib/appwrite";
-import { Query } from "node-appwrite";
+import { ID, Query } from "node-appwrite";
 import { Notification } from "../type";
 
 export const makeUnseenNotificationAsSeen = async (
@@ -39,4 +39,27 @@ export const makeUnseenNotificationAsSeen = async (
   );
 
   return { success: true };
+};
+
+interface PushNotificationParams {
+  workspaceId: string;
+  message: string;
+  projectId?: string;
+  taskId?: string;
+  to?: string;
+  link?: string;
+  isMeetingNotification: boolean;
+}
+
+export const pushNotification = async (params: PushNotificationParams) => {
+  const { databases, account } = await createSessionClient();
+  const user = await account.get();
+
+  if (!user) return false;
+
+  await databases.createDocument(DATABASE_ID, NOTIFICATIONS_ID, ID.unique(), {
+    ...params,
+  });
+
+  return true;
 };

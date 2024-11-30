@@ -8,6 +8,7 @@ export type Notification = Models.Document & {
   seenBy?: string;
   link?: string;
   taskId?: string;
+  isMeetingNotification: boolean;
 };
 
 export type PopulatedNotification = Models.Document & {
@@ -26,4 +27,5 @@ export type PopulatedNotification = Models.Document & {
   to?: string;
   seenBy?: string[];
   link?: string;
+  isMeetingNotification: boolean;
 };

@@ -23,6 +23,8 @@ import useWorkspaceId from "@/features/workspaces/hooks/use-workspace-id";
 import { useGetUserIsAdmin } from "@/features/workspaces/api/use-get-user-isAdmin";
 import PageLoader from "@/components/custom/shared/page-loader";
 import { useGetMembers } from "@/features/members/api/use-get-members";
+import { pushNotification } from "@/features/notifications/server/actions";
+import { useGetWorkspace } from "@/features/workspaces/api/use-get-workspace";
 
 const cardData = [
   {
@@ -78,6 +80,9 @@ const MeetingTypeList = ({ user }: Props) => {
   const router = useRouter();
   const pathname = usePathname();
 
+  const { data: workspace, isLoading: isLoadingWorkspace } = useGetWorkspace({
+    workspaceId,
+  });
   const { data: isAdmin, isLoading: isLoadingIsAdmin } = useGetUserIsAdmin({
     workspaceId,
     userId: user.$id,
@@ -140,8 +145,23 @@ const MeetingTypeList = ({ user }: Props) => {
 
       setCallDetails(call);
 
+      // that means instant meeting created
       if (!values.description) {
+        await pushNotification({
+          workspaceId,
+          message: `An admin has created an instant meeting and invite all members of ${workspace?.name} workspace to join.`,
+          link: `${pathname}/${call.id}`,
+          isMeetingNotification: true,
+        });
+
         router.push(`${pathname}/${call.id}`);
+      } else {
+        await pushNotification({
+          workspaceId,
+          message: `A meeting has scheduled and invite all members of ${workspace?.name} workspace to join timely.`,
+          link: `${pathname}/upcoming`,
+          isMeetingNotification: false,
+        });
       }
 
       toast.success("Meeting created");
@@ -153,7 +173,7 @@ const MeetingTypeList = ({ user }: Props) => {
     }
   };
 
-  if (isLoadingIsAdmin) return <PageLoader />;
+  if (isLoadingIsAdmin || isLoadingWorkspace) return <PageLoader />;
 
   const meetingLink = `${BASE_URL}${pathname}/${callDetails?.id}`;
 

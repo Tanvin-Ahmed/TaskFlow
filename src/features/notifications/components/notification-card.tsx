@@ -43,7 +43,10 @@ const NotificationCard = ({ notification }: Props) => {
       {notification.link ? (
         <Button size={"sm"} className="h-5 w-full p-1" asChild>
           <Link href={notification.link} className="h-full w-full">
-            <FiArrowUpRight /> &nbsp; Check the update
+            <FiArrowUpRight /> &nbsp;{" "}
+            {notification.isMeetingNotification
+              ? "Join meeting"
+              : "Check the update"}
           </Link>
         </Button>
       ) : null}
