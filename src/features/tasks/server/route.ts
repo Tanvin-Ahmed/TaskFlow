@@ -262,7 +262,7 @@ const app = new Hono()
             to: assigneeId,
             taskId: task.$id,
             message: `${user.name} assigned you to a task, named ${name} in ${project.name} project`,
-            link: `/workspaces/${workspaceId}/projects/${projectId}`,
+            link: `/dashboard/workspaces/${workspaceId}/projects/${projectId}`,
           },
         );
       }
