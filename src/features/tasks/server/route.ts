@@ -457,6 +457,20 @@ const app = new Hono()
       return c.json({ error: "Unauthorized" }, 401);
     }
 
+    // check if the user is admin or owner of the workspace
+    const isAdmin = getIsAdmin(task.workspaceId, user.$id);
+    const isOwner = getIsOwner(user.$id, task.workspaceId);
+
+    if (!isAdmin && !isOwner) {
+      return c.json(
+        {
+          error:
+            "Unauthorized. Only admin or owner can assign task to the members.",
+        },
+        401,
+      );
+    }
+
     await databases.deleteDocument(DATABASE_ID, TASKS_ID, taskId);
 
     // delete notification about this task

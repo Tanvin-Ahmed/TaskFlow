@@ -1,5 +1,4 @@
 "use client";
-
 import Link from "next/link";
 import CustomAvatar from "../custom-avatar";
 import DottedSeparator from "../dotted-separator";

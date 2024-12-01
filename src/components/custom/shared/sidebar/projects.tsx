@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { DEFAULT_VALUES } from "@/constant/values";
+import useUserWith from "@/features/auth/api/use-user-with";
 import { useGetSubscription } from "@/features/pricing/api/use-get-subscription";
 import useGetProjects from "@/features/projects/api/use-get-projects";
 import ProjectAvatar from "@/features/projects/components/project-avatar";
@@ -29,6 +30,7 @@ const Projects = ({ user, isOwner, workspace }: Props) => {
   const { data: projects, isLoading: isLoadingProject } = useGetProjects({
     workspaceId,
   });
+  const { data: myProjects, isLoading: isLoadingMyProjects } = useUserWith();
   const { data: subscription, isLoading: isLoadingSubscription } =
     useGetSubscription({ userId: isOwner ? user.$id : workspace.userId });
   const { data: isAdmin, isLoading: isLoadingIsAdmin } = useGetUserIsAdmin({
@@ -47,11 +49,21 @@ const Projects = ({ user, isOwner, workspace }: Props) => {
         : false) ||
     !isAdmin;
 
+  const isAuthorizedForAllProject = isAdmin || isOwner;
+  const isProjectLoading = isAuthorizedForAllProject
+    ? isLoadingProject
+    : isLoadingMyProjects;
+  const allProjects = isAuthorizedForAllProject
+    ? projects
+    : myProjects
+      ? { total: myProjects?.projects?.length, documents: myProjects?.projects }
+      : { total: 0, documents: [] };
+
   return (
     <div className="flex flex-col gap-y-2">
       <div className="flex items-center justify-between">
         <p className="text-xs uppercase text-neutral-500 dark:text-neutral-50">
-          Projects
+          {isAuthorizedForAllProject ? "Projects" : "Your Projects"}
         </p>
         <Button
           size={"icon"}
@@ -69,12 +81,12 @@ const Projects = ({ user, isOwner, workspace }: Props) => {
           )}
         </Button>
       </div>
-      {isLoadingProject ? (
+      {isProjectLoading ? (
         <div className="flex w-full items-center justify-center p-3">
           <Loader className="size-5 animate-spin" />
         </div>
-      ) : projects && !!projects.total ? (
-        projects.documents.map((project) => {
+      ) : allProjects && !!allProjects.total ? (
+        allProjects.documents.map((project) => {
           const href = `/dashboard/workspaces/${workspaceId}/projects/${project.$id}`;
           const isActive = pathname === href;
 
