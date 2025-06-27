@@ -1,10 +1,14 @@
 import { sessionMiddleware } from "@/lib/session-middleware";
-import { Hono } from "hono";
-import { PLANS } from "../libs/utils";
-import { getUserSubscriptionPlan, stripe } from "./stripe";
-import { PaymentStatus, UserPaymentStatus } from "../types";
 import { BASE_URL, DATABASE_ID, USER_PAYMENT_STATUS_ID } from "@/config";
+
+import { Hono } from "hono";
+
 import { Query } from "node-appwrite";
+
+import { PaymentStatus, UserPaymentStatus } from "../types";
+import { PLANS } from "../libs/utils";
+
+import { getUserSubscriptionPlan, stripe } from "./stripe";
 
 const app = new Hono()
   .post("/", sessionMiddleware, async (c) => {
@@ -37,7 +41,7 @@ const app = new Hono()
     const stripeSession = await stripe.checkout.sessions.create({
       success_url: billingUrl,
       cancel_url: billingUrl,
-      payment_method_types: ["card", "paypal"],
+      payment_method_types: ["card", "amazon_pay", "link"],
       mode: "subscription",
       billing_address_collection: "auto",
       customer_email: user.email,
