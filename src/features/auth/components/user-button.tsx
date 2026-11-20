@@ -34,7 +34,7 @@ const UserButton = () => {
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger className="relative outline-none">
         <CustomAvatar
-          src=""
+          src={user.imageUrl || ""}
           alt={avatarFallback}
           className="size-8 border border-neutral-300 transition hover:opacity-75 dark:border-purple-300"
           fallbackClassName="bg-neutral-200 dark:bg-purple-900/40 font-medium text-neutral-500"
@@ -48,7 +48,7 @@ const UserButton = () => {
       >
         <div className="flex flex-col items-center justify-center gap-2 px-2.5 py-4">
           <CustomAvatar
-            src=""
+            src={user.imageUrl || ""}
             alt={avatarFallback}
             className="size-[52px] border border-neutral-300 transition hover:opacity-75 dark:border-purple-300"
             fallbackClassName="bg-neutral-200 dark:bg-purple-900/40 text-xl font-medium text-neutral-500"

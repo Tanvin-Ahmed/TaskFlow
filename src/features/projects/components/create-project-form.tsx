@@ -49,6 +49,7 @@ const CreateProjectForm = ({ onCancel }: Props) => {
       {
         onSuccess: ({ data }) => {
           form.reset();
+          onCancel?.();
           router.push(
             `/dashboard/workspaces/${workspaceId}/projects/${data.$id}`,
           );

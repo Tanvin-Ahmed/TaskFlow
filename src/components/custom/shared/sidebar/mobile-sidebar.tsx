@@ -1,4 +1,5 @@
 "use client";
+import type { AppUser } from "@/types/auth";
 
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -6,10 +7,10 @@ import { MenuIcon } from "lucide-react";
 import Sidebar from "./sidebar";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import { Models } from "node-appwrite";
+
 
 interface Props {
-  user: Models.User<Models.Preferences>;
+  user: AppUser;
 }
 
 const MobileSidebar = ({ user }: Props) => {

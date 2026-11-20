@@ -1,4 +1,5 @@
 "use client";
+import type { AppUser } from "@/types/auth";
 import Link from "next/link";
 import CustomAvatar from "../custom-avatar";
 import DottedSeparator from "../dotted-separator";
@@ -6,14 +7,14 @@ import Navigation from "./navigation";
 import WorkspaceSwitcher from "./workspace-switcher";
 import Projects from "./projects";
 import ProjectProgress from "./project-progress";
-import { Models } from "node-appwrite";
+
 import useWorkspaceId from "@/features/workspaces/hooks/use-workspace-id";
 import { LoaderIcon } from "lucide-react";
 import { useGetUserIsOwner } from "@/features/workspaces/api/use-get-user-isOwner";
 import { useGetWorkspace } from "@/features/workspaces/api/use-get-workspace";
 
 interface Props {
-  user: Models.User<Models.Preferences>;
+  user: AppUser;
 }
 
 const Sidebar = ({ user }: Props) => {

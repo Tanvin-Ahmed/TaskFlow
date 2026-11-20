@@ -1,10 +1,11 @@
+import type { AppUser } from "@/types/auth";
 import { Call, useStreamVideoClient } from "@stream-io/video-react-sdk";
 import { useQuery } from "@tanstack/react-query";
-import { Models } from "node-appwrite";
+
 
 interface Props {
   workspaceId: string;
-  user: Models.User<Models.Preferences>;
+  user: AppUser;
 }
 
 const useGetCalls = ({ workspaceId, user }: Props) => {

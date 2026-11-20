@@ -1,71 +1,56 @@
 import { sessionMiddleware } from "@/lib/session-middleware";
-import { BASE_URL, DATABASE_ID, USER_PAYMENT_STATUS_ID } from "@/config";
-
+import { BASE_URL } from "@/config";
 import { Hono } from "hono";
-
-import { ID, Permission, Query, Role } from "node-appwrite";
-
-import { PaymentStatus, UserPaymentStatus } from "../types";
+import { eq } from "drizzle-orm";
+import { PaymentStatus } from "../types";
 import { PLANS } from "../libs/utils";
-
 import { getUserSubscriptionPlan, stripe } from "./stripe";
 import { syncSubscriptionFromStripe } from "./sync-subscription";
+import { db } from "@/db";
+import { userPaymentStatus } from "@/db/schema";
+import { createId } from "@/lib/id";
 
 const app = new Hono()
   .post("/", sessionMiddleware, async (c) => {
-    const databases = c.get("databases");
     const user = c.get("user");
 
-    // Ensure Pro status is synced before opening portal/checkout.
     try {
-      await syncSubscriptionFromStripe(user.$id, databases);
+      await syncSubscriptionFromStripe(user.$id);
     } catch (error) {
       console.error("Pre-checkout subscription sync failed:", error);
     }
 
-    let dbUser = await databases.listDocuments<UserPaymentStatus>(
-      DATABASE_ID,
-      USER_PAYMENT_STATUS_ID,
-      [Query.equal("userId", user.$id)],
-    );
+    let rows = await db
+      .select()
+      .from(userPaymentStatus)
+      .where(eq(userPaymentStatus.userId, user.$id))
+      .limit(1);
 
-    // New users may not have a payment-status doc yet (home-page seed can be missed).
-    // Create one here instead of returning 401 and blocking Stripe checkout.
-    if (!dbUser.total || !dbUser.documents[0].$id) {
-      await databases.createDocument(
-        DATABASE_ID,
-        USER_PAYMENT_STATUS_ID,
-        ID.unique(),
-        {
-          userId: user.$id,
-          paymentStatus: PaymentStatus.Normal,
-        },
-        [
-          Permission.read(Role.any()),
-          Permission.update(Role.any()),
-          Permission.delete(Role.any()),
-        ],
-      );
+    if (!rows.length) {
+      await db.insert(userPaymentStatus).values({
+        id: createId(),
+        userId: user.$id,
+        paymentStatus: PaymentStatus.Normal,
+      });
 
-      dbUser = await databases.listDocuments<UserPaymentStatus>(
-        DATABASE_ID,
-        USER_PAYMENT_STATUS_ID,
-        [Query.equal("userId", user.$id)],
-      );
+      rows = await db
+        .select()
+        .from(userPaymentStatus)
+        .where(eq(userPaymentStatus.userId, user.$id))
+        .limit(1);
     }
 
-    if (!dbUser.total || !dbUser.documents[0].$id) {
+    if (!rows.length) {
       return c.json({ error: "Failed to initialize payment status" }, 500);
     }
 
     const billingUrl = `${BASE_URL}/pricing`;
     const dashboardUrl = `${BASE_URL}/dashboard`;
-
     const subscriptionPlan = await getUserSubscriptionPlan();
 
-    if (subscriptionPlan.isSubscribed && dbUser.documents[0].stripeCustomerId) {
+    if (subscriptionPlan.isSubscribed && rows[0].stripeCustomerId) {
       const stripeSession = await stripe.billingPortal.sessions.create({
-        customer: dbUser.documents[0].stripeCustomerId,
+        customer: rows[0].stripeCustomerId,
         return_url: dashboardUrl,
       });
 
@@ -98,7 +83,6 @@ const app = new Hono()
     return c.json({ url: stripeSession.url });
   })
   .get("/:userId", sessionMiddleware, async (c) => {
-    const databases = c.get("databases");
     const { userId } = c.req.param();
 
     if (!userId) {
@@ -112,31 +96,31 @@ const app = new Hono()
       });
     }
 
-    let dbUser = await databases.listDocuments<UserPaymentStatus>(
-      DATABASE_ID,
-      USER_PAYMENT_STATUS_ID,
-      [Query.equal("userId", userId)],
-    );
+    let rows = await db
+      .select()
+      .from(userPaymentStatus)
+      .where(eq(userPaymentStatus.userId, userId))
+      .limit(1);
 
     const needsSync =
-      !dbUser.total ||
-      dbUser.documents[0].paymentStatus === PaymentStatus.Normal ||
-      !dbUser.documents[0].stripePriceId;
+      !rows.length ||
+      rows[0].paymentStatus === PaymentStatus.Normal ||
+      !rows[0].stripePriceId;
 
     if (needsSync) {
       try {
-        await syncSubscriptionFromStripe(userId, databases);
-        dbUser = await databases.listDocuments<UserPaymentStatus>(
-          DATABASE_ID,
-          USER_PAYMENT_STATUS_ID,
-          [Query.equal("userId", userId)],
-        );
+        await syncSubscriptionFromStripe(userId);
+        rows = await db
+          .select()
+          .from(userPaymentStatus)
+          .where(eq(userPaymentStatus.userId, userId))
+          .limit(1);
       } catch (error) {
         console.error("Subscription sync failed:", error);
       }
     }
 
-    if (!dbUser.total) {
+    if (!rows.length) {
       return c.json({
         data: {
           ...PLANS[0],
@@ -147,9 +131,11 @@ const app = new Hono()
       });
     }
 
+    const paymentDoc = rows[0];
+
     if (
-      dbUser.documents[0].paymentStatus === PaymentStatus.Normal ||
-      !dbUser.documents[0].stripePriceId
+      paymentDoc.paymentStatus === PaymentStatus.Normal ||
+      !paymentDoc.stripePriceId
     ) {
       return c.json({
         data: {
@@ -162,24 +148,22 @@ const app = new Hono()
     }
 
     const isSubscribed = Boolean(
-      dbUser.documents[0].stripePriceId &&
-        dbUser.documents[0].stripeCurrentPeriodEnd &&
-        new Date(dbUser.documents[0].stripeCurrentPeriodEnd).getTime() +
-          86_400_000 >
+      paymentDoc.stripePriceId &&
+        paymentDoc.stripeCurrentPeriodEnd &&
+        new Date(paymentDoc.stripeCurrentPeriodEnd).getTime() + 86_400_000 >
           Date.now(),
     );
 
     const plan = isSubscribed
       ? (PLANS.find(
-          (plan) =>
-            plan.price.priceIds.test === dbUser.documents[0].stripePriceId,
+          (p) => p.price.priceIds.test === paymentDoc.stripePriceId,
         ) ?? PLANS[1])
       : PLANS[0];
 
     let isCanceled = false;
-    if (isSubscribed && dbUser.documents[0].stripeSubscriptionId) {
+    if (isSubscribed && paymentDoc.stripeSubscriptionId) {
       const stripePlan = await stripe.subscriptions.retrieve(
-        dbUser.documents[0].stripeSubscriptionId,
+        paymentDoc.stripeSubscriptionId,
       );
       isCanceled = stripePlan.cancel_at_period_end;
     }
@@ -187,9 +171,9 @@ const app = new Hono()
     return c.json({
       data: {
         ...plan,
-        stripeSubscriptionId: dbUser.documents[0].stripeSubscriptionId,
-        stripeCurrentPeriodEnd: dbUser.documents[0].stripeCurrentPeriodEnd,
-        stripeCustomerId: dbUser.documents[0].stripeCustomerId,
+        stripeSubscriptionId: paymentDoc.stripeSubscriptionId,
+        stripeCurrentPeriodEnd: paymentDoc.stripeCurrentPeriodEnd,
+        stripeCustomerId: paymentDoc.stripeCustomerId,
         isSubscribed,
         isCanceled,
       },

@@ -1,4 +1,5 @@
 "use client";
+import type { AppUser } from "@/types/auth";
 
 import Analytics from "@/components/custom/analytics/analytics";
 import PageError from "@/components/custom/shared/page-error";
@@ -10,10 +11,10 @@ import useProjectId from "@/features/projects/hooks/use-project-id";
 import TaskViewSwitcher from "@/features/tasks/components/task-view-switcher";
 import { useGetWorkspace } from "@/features/workspaces/api/use-get-workspace";
 import useWorkspaceId from "@/features/workspaces/hooks/use-workspace-id";
-import { Models } from "node-appwrite";
+
 
 interface Props {
-  user: Models.User<Models.Preferences>;
+  user: AppUser;
 }
 
 const ProjectIdClient = ({ user }: Props) => {

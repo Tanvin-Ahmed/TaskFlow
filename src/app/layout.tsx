@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { ClerkProvider } from "@clerk/nextjs";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { cn } from "@/lib/utils";
 import "./globals.css";
@@ -7,7 +8,6 @@ import QueryProviders from "@/components/providers/query-provider";
 import { Toaster } from "@/components/ui/sonner";
 import "react-datepicker/dist/react-datepicker.css";
 import LiveBlockProvider from "@/components/providers/liveblock-provider";
-import AppwriteProvider from "@/components/providers/appwrite-provider";
 import "@liveblocks/react-ui/styles.css";
 import "@liveblocks/react-lexical/styles.css";
 
@@ -27,29 +27,29 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body
-        className={cn(
-          inter.className,
-          "min-h-screen bg-background font-sans antialiased",
-        )}
-      >
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
+    <ClerkProvider>
+      <html lang="en">
+        <body
+          className={cn(
+            inter.className,
+            "min-h-screen bg-background font-sans antialiased",
+          )}
         >
-          <AppwriteProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
             <LiveBlockProvider>
               <QueryProviders>
                 <Toaster />
                 {children}
               </QueryProviders>
             </LiveBlockProvider>
-          </AppwriteProvider>
-        </ThemeProvider>
-      </body>
-    </html>
+          </ThemeProvider>
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }

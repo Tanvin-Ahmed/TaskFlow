@@ -1,4 +1,5 @@
 "use client";
+import type { AppUser } from "@/types/auth";
 import { useRouter } from "next/navigation";
 import useGetProjects from "../api/use-get-projects";
 import ProjectAvatar from "./project-avatar";
@@ -21,7 +22,7 @@ import {
 import { DropdownMenuItem } from "@radix-ui/react-dropdown-menu";
 import { toast } from "sonner";
 import { createDocument } from "@/features/live-block/server/actions";
-import { Models } from "node-appwrite";
+
 import { useUpdateProject } from "../api/use-update-project";
 import useProjectId from "../hooks/use-project-id";
 import { useState } from "react";
@@ -32,7 +33,7 @@ import { Workspace } from "@/features/workspaces/types";
 
 interface Props {
   initialValues: Project;
-  user: Models.User<Models.Preferences>;
+  user: AppUser;
   workspace: Workspace;
 }
 

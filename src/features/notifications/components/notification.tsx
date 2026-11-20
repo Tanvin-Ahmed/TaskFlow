@@ -11,9 +11,7 @@ import DottedSeparator from "@/components/custom/shared/dotted-separator";
 import { useUnreadInboxNotificationsCount } from "@liveblocks/react/suspense";
 import DocNotificationList from "@/features/live-block/components/doc-notification-list";
 import { cn } from "@/lib/utils";
-import useAppWrite from "@/hooks/use-app-write";
-import { useEffect, useState } from "react";
-import { DATABASE_ID, NOTIFICATIONS_ID } from "@/config";
+import { useState } from "react";
 import useNotifications from "../api/use-notifications";
 import { useQueryClient } from "@tanstack/react-query";
 import { PopulatedNotification } from "../type";
@@ -25,30 +23,8 @@ const AuthenticatedNotification = () => {
   const queryClient = useQueryClient();
   const { count } = useUnreadInboxNotificationsCount();
   const { data: notifications, isLoading } = useNotifications();
-  const { client } = useAppWrite();
 
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
-
-  useEffect(() => {
-    if (!client) return;
-
-    const unsubscribe = client.subscribe(
-      `databases.${DATABASE_ID}.collections.${NOTIFICATIONS_ID}.documents`,
-      (response) => {
-        if (
-          response.events.some((event) => event.includes(".create")) ||
-          response.events.some((event) => event.includes(".update")) ||
-          response.events.some((event) => event.includes(".delete"))
-        ) {
-          queryClient.invalidateQueries({ queryKey: ["notifications"] });
-        }
-      },
-    );
-
-    return () => {
-      if (unsubscribe) unsubscribe();
-    };
-  }, [client, queryClient]);
 
   const handlePopoverChange = (isOpen: boolean) => {
     if (!isOpen && isPopoverOpen) {

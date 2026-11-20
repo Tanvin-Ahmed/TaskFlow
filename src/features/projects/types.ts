@@ -1,11 +1,14 @@
-import { Models } from "node-appwrite";
-
-export type Project = Models.Document & {
+export type Project = {
+  $id: string;
   name: string;
   imageUrl?: string;
   userId: string;
   imageId?: string;
   workspaceId: string;
-  docPermissionMemberList?: string;
-  isDocCreated?: string;
+  docs?: string;
+  canvas?: string;
+  docPermissionMemberList?: string | string[];
+  isDocCreated?: boolean | string;
+  $createdAt?: string;
+  $updatedAt?: string;
 };

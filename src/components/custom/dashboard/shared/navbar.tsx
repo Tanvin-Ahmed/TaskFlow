@@ -1,10 +1,11 @@
 "use client";
+import type { AppUser } from "@/types/auth";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "../../shared/theme-button";
 import UserButton from "@/features/auth/components/user-button";
 import { usePathname } from "next/navigation";
 import MobileSidebar from "../../shared/sidebar/mobile-sidebar";
-import { Models } from "node-appwrite";
+
 import Notification from "@/features/notifications/components/notification";
 
 const pageNameMap = {
@@ -24,7 +25,7 @@ const defaultMap = {
 };
 
 interface Props {
-  user: Models.User<Models.Preferences>;
+  user: AppUser;
 }
 
 const DashboardNavbar = ({ user }: Props) => {

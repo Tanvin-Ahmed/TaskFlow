@@ -1,4 +1,5 @@
 "use client";
+import type { AppUser } from "@/types/auth";
 import useProjectId from "@/features/projects/hooks/use-project-id";
 import PageLoader from "@/components/custom/shared/page-loader";
 import ActiveCollaborators from "@/features/live-block/components/active-collaborators";
@@ -10,14 +11,14 @@ import { Button } from "@/components/ui/button";
 import useGetDoc from "@/features/live-block/api/use-get-doc";
 import { useGetUserIsAdmin } from "@/features/workspaces/api/use-get-user-isAdmin";
 import useWorkspaceId from "@/features/workspaces/hooks/use-workspace-id";
-import { Models } from "node-appwrite";
+
 import { useGetUserIsOwner } from "@/features/workspaces/api/use-get-user-isOwner";
 import { LoaderIcon, TrashIcon, UserPlus } from "lucide-react";
 import useConfirm from "@/hooks/use-confirm";
 import { useDeleteDoc } from "@/features/live-block/api/use-delete-doc";
 
 interface Props {
-  user: Models.User<Models.Preferences>;
+  user: AppUser;
 }
 
 const DocClient = ({ user }: Props) => {

@@ -1,10 +1,11 @@
 import Stripe from "stripe";
+import { eq } from "drizzle-orm";
 import { PLANS } from "../libs/utils";
 import { getCurrent } from "@/features/auth/server/queries";
-import { Query } from "node-appwrite";
 import { UserPaymentStatus } from "../types";
-import { createSessionClient } from "@/lib/appwrite";
-import { DATABASE_ID, USER_PAYMENT_STATUS_ID } from "@/config";
+import { db } from "@/db";
+import { userPaymentStatus } from "@/db/schema";
+import { toDocument } from "@/db/mappers";
 import { syncSubscriptionFromStripe } from "./sync-subscription";
 
 export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY ?? "", {
@@ -20,8 +21,8 @@ function buildPlanResponse(doc: UserPaymentStatus) {
   );
 
   const plan = isSubscribed
-    ? PLANS.find((p) => p.price.priceIds.test === doc.stripePriceId) ??
-      PLANS[1]
+    ? (PLANS.find((p) => p.price.priceIds.test === doc.stripePriceId) ??
+      PLANS[1])
     : PLANS[0];
 
   return {
@@ -42,30 +43,31 @@ export async function getUserSubscriptionPlan() {
     };
   }
 
-  const { databases } = await createSessionClient();
-  let dbUser = await databases.listDocuments<UserPaymentStatus>(
-    DATABASE_ID,
-    USER_PAYMENT_STATUS_ID,
-    [Query.equal("userId", user.$id)],
-  );
+  let rows = await db
+    .select()
+    .from(userPaymentStatus)
+    .where(eq(userPaymentStatus.userId, user.$id))
+    .limit(1);
 
-  let doc = dbUser.documents[0];
+  let doc = rows[0]
+    ? (toDocument(rows[0]) as unknown as UserPaymentStatus)
+    : undefined;
   let { isSubscribed } = doc
     ? buildPlanResponse(doc)
     : { isSubscribed: false };
 
-  // Heal missed webhooks (e.g. local Stripe checkout without forwarding).
-  // Use the user session DB client so this works without API key document scopes.
   if (!isSubscribed) {
     try {
-      const synced = await syncSubscriptionFromStripe(user.$id, databases);
+      const synced = await syncSubscriptionFromStripe(user.$id);
       if (synced) {
-        dbUser = await databases.listDocuments<UserPaymentStatus>(
-          DATABASE_ID,
-          USER_PAYMENT_STATUS_ID,
-          [Query.equal("userId", user.$id)],
-        );
-        doc = dbUser.documents[0];
+        rows = await db
+          .select()
+          .from(userPaymentStatus)
+          .where(eq(userPaymentStatus.userId, user.$id))
+          .limit(1);
+        doc = rows[0]
+          ? (toDocument(rows[0]) as unknown as UserPaymentStatus)
+          : undefined;
       }
     } catch (error) {
       console.error("Failed to sync subscription from Stripe:", error);

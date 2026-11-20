@@ -1,4 +1,5 @@
 "use client";
+import type { AppUser } from "@/types/auth";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { DEFAULT_VALUES } from "@/constant/values";
@@ -8,10 +9,10 @@ import useGetProjects from "@/features/projects/api/use-get-projects";
 import useWorkspaceId from "@/features/workspaces/hooks/use-workspace-id";
 import { Loader, Sparkles } from "lucide-react";
 import Link from "next/link";
-import { Models } from "node-appwrite";
+
 
 interface Props {
-  user: Models.User<Models.Preferences>;
+  user: AppUser;
 }
 
 const ProjectProgress = ({ user }: Props) => {

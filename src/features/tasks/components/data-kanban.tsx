@@ -1,4 +1,5 @@
 "use client";
+import type { AppUser } from "@/types/auth";
 import { useCallback, useEffect, useState } from "react";
 import { PopulatedTask, TaskStatus } from "../types";
 import {
@@ -9,7 +10,7 @@ import {
 } from "@hello-pangea/dnd";
 import KanbanBoardHeader from "./kanban-board-header";
 import KanbanCard from "./kanban-card";
-import { Models } from "node-appwrite";
+
 import { toast } from "sonner";
 
 interface Props {
@@ -21,7 +22,7 @@ interface Props {
       position: number;
     }[],
   ) => void;
-  user: Models.User<Models.Preferences>;
+  user: AppUser;
 }
 
 const boards: TaskStatus[] = [

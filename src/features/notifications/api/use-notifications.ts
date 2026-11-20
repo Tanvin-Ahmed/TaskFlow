@@ -18,6 +18,8 @@ const useNotifications = () => {
       const { data } = await response.json();
       return data;
     },
+    refetchInterval: 20_000,
+    refetchOnWindowFocus: true,
   });
 
   return query;

@@ -1,4 +1,5 @@
 "use client";
+import type { AppUser } from "@/types/auth";
 
 import DottedSeparator from "@/components/custom/shared/dotted-separator";
 import { Button } from "@/components/ui/button";
@@ -10,13 +11,13 @@ import useWorkspaceId from "../hooks/use-workspace-id";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatDistanceToNow } from "date-fns";
 import { useTheme } from "next-themes";
-import { Models } from "node-appwrite";
+
 import { useGetUserIsAdmin } from "../api/use-get-user-isAdmin";
 
 interface Props {
   data: PopulatedTask[];
   total: number;
-  user: Models.User<Models.Preferences>;
+  user: AppUser;
 }
 
 const TaskList = ({ data, total, user }: Props) => {

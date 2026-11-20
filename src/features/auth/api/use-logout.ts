@@ -1,20 +1,16 @@
-import { client } from "@/lib/rpc";
+import { useClerk } from "@clerk/nextjs";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { InferResponseType } from "hono";
 import { useRouter } from "next/navigation";
-
-type ResponseType = InferResponseType<
-  (typeof client.api.auth.logout)["$delete"]
->;
 
 export const useLogout = () => {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { signOut } = useClerk();
 
-  const mutation = useMutation<ResponseType, Error>({
+  const mutation = useMutation({
     mutationFn: async () => {
-      const res = await client.api.auth.logout["$delete"]();
-      return await res.json();
+      await signOut();
+      return { success: true };
     },
     onSuccess: () => {
       router.push("/sign-in");

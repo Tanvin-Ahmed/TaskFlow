@@ -1,9 +1,10 @@
 "use client";
+import type { AppUser } from "@/types/auth";
 import { Button } from "@/components/ui/button";
 import { Video } from "lucide-react";
 import useWorkspaceId from "../hooks/use-workspace-id";
 import { useGetSubscription } from "@/features/pricing/api/use-get-subscription";
-import { Models } from "node-appwrite";
+
 import { useRouter } from "next/navigation";
 import { useGetUserIsOwner } from "../api/use-get-user-isOwner";
 import { Workspace } from "../types";
@@ -11,7 +12,7 @@ import { toast } from "sonner";
 import { LoaderIcon } from "lucide-react";
 
 interface Props {
-  user: Models.User<Models.Preferences>;
+  user: AppUser;
   workspace: Workspace;
 }
 

@@ -1,7 +1,8 @@
-import { DATABASE_ID, USER_PAYMENT_STATUS_ID } from "@/config";
-import { createAdminClient } from "@/lib/appwrite";
-import { Databases, ID, Query } from "node-appwrite";
+import { eq } from "drizzle-orm";
 import Stripe from "stripe";
+import { db } from "@/db";
+import { userPaymentStatus } from "@/db/schema";
+import { createId } from "@/lib/id";
 import { PaymentStatus } from "../types";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY ?? "", {
@@ -11,15 +12,9 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY ?? "", {
 
 /**
  * Recover Pro status when Stripe checkout succeeded but the webhook
- * failed to update Appwrite (common in local/dev).
- *
- * Prefer passing the authenticated user `databases` client so updates work
- * even when the API key is missing documents.read/write scopes.
+ * failed to update the database (common in local/dev).
  */
-export async function syncSubscriptionFromStripe(
-  userId: string,
-  databases?: Databases,
-) {
+export async function syncSubscriptionFromStripe(userId: string) {
   const sessions = await stripe.checkout.sessions.list({
     limit: 30,
   });
@@ -44,40 +39,32 @@ export async function syncSubscriptionFromStripe(
     return false;
   }
 
-  const db =
-    databases ?? (await createAdminClient()).databases;
-
-  const existing = await db.listDocuments(
-    DATABASE_ID,
-    USER_PAYMENT_STATUS_ID,
-    [Query.equal("userId", userId)],
-  );
+  const existing = await db
+    .select()
+    .from(userPaymentStatus)
+    .where(eq(userPaymentStatus.userId, userId))
+    .limit(1);
 
   const payload = {
     userId,
-    paymentStatus: PaymentStatus.Pro,
+    paymentStatus: PaymentStatus.Pro as const,
     stripeSubscriptionId: subscription.id,
     stripeCustomerId: subscription.customer as string,
     stripePriceId: subscription.items.data[0]?.price.id,
-    stripeCurrentPeriodEnd: new Date(
-      subscription.current_period_end * 1000,
-    ).toISOString(),
+    stripeCurrentPeriodEnd: new Date(subscription.current_period_end * 1000),
+    updatedAt: new Date(),
   };
 
-  if (existing.total) {
-    await db.updateDocument(
-      DATABASE_ID,
-      USER_PAYMENT_STATUS_ID,
-      existing.documents[0].$id,
-      payload,
-    );
+  if (existing.length) {
+    await db
+      .update(userPaymentStatus)
+      .set(payload)
+      .where(eq(userPaymentStatus.id, existing[0].id));
   } else {
-    await db.createDocument(
-      DATABASE_ID,
-      USER_PAYMENT_STATUS_ID,
-      ID.unique(),
-      payload,
-    );
+    await db.insert(userPaymentStatus).values({
+      id: createId(),
+      ...payload,
+    });
   }
 
   return true;

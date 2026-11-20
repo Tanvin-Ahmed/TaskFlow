@@ -1,4 +1,5 @@
 "use client";
+import type { AppUser } from "@/types/auth";
 import DottedSeparator from "@/components/custom/shared/dotted-separator";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -17,12 +18,12 @@ import { TaskStatus } from "../types";
 import { useBulkUpdateTasks } from "../api/use-bulk-update-tasks";
 import DataCalender from "./data-calender";
 import useProjectId from "@/features/projects/hooks/use-project-id";
-import { Models } from "node-appwrite";
+
 
 interface Props {
   hideProjectFilter?: boolean;
   hideAssigneeFilters?: boolean;
-  user: Models.User<Models.Preferences>;
+  user: AppUser;
 }
 
 const TaskViewSwitcher = ({

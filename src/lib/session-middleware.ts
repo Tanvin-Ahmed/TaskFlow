@@ -1,57 +1,50 @@
-"use server";
-
-import { AUTH_COOKIE } from "@/features/auth/constant";
-import { getCookie } from "hono/cookie";
 import { createMiddleware } from "hono/factory";
-import {
-  Account,
-  Client,
-  Databases,
-  Models,
-  Storage,
-  type Account as AccountType,
-  type Databases as DatabasesType,
-  type Storage as StorageType,
-  type Users as UsersType,
-} from "node-appwrite";
+import { auth, currentUser } from "@clerk/nextjs/server";
+import { db } from "@/db";
+import type { Database } from "@/db";
+import type { AppUser } from "@/types/auth";
 
 type AdditionalContext = {
   Variables: {
-    account: AccountType;
-    databases: DatabasesType;
-    storage: StorageType;
-    users: UsersType;
-    user: Models.User<Models.Preferences>;
+    db: Database;
+    user: AppUser;
   };
 };
 
 export const sessionMiddleware = createMiddleware<AdditionalContext>(
   async (c, next) => {
-    const client = new Client()
-      .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT!)
-      .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT!);
+    const { userId } = auth();
 
-    const session = getCookie(c, AUTH_COOKIE);
-
-    if (!session) {
+    if (!userId) {
       return c.json({ error: "Unauthorized" }, 401);
     }
 
-    client.setSession(session);
-
-    const account = new Account(client);
-    const databases = new Databases(client);
-    const storage = new Storage(client);
-
-    try {
-      const user = await account.get();
-      c.set("user", user);
-      c.set("account", account);
-      c.set("databases", databases);
-      c.set("storage", storage);
-    } catch {
+    const clerkUser = await currentUser();
+    if (!clerkUser) {
       return c.json({ error: "Unauthorized" }, 401);
     }
+
+    const email =
+      clerkUser.emailAddresses.find(
+        (e) => e.id === clerkUser.primaryEmailAddressId,
+      )?.emailAddress ??
+      clerkUser.emailAddresses[0]?.emailAddress ??
+      "";
+
+    const name =
+      [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(" ") ||
+      clerkUser.username ||
+      email;
+
+    const user: AppUser = {
+      $id: clerkUser.id,
+      name,
+      email,
+      imageUrl: clerkUser.imageUrl,
+    };
+
+    c.set("user", user);
+    c.set("db", db);
 
     await next();
   },

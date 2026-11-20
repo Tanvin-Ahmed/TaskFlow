@@ -1,19 +1,15 @@
-import { createAdminClient } from "@/lib/appwrite";
 import { sessionMiddleware } from "@/lib/session-middleware";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { z } from "zod";
+import { and, eq } from "drizzle-orm";
 import { getMember } from "../utils";
-import {
-  DATABASE_ID,
-  MEMBERS_ID,
-  NOTIFICATIONS_ID,
-  TASKS_ID,
-  WORKSPACES_ID,
-} from "@/config";
-import { ID, Query } from "node-appwrite";
-import { Member, MemberRole } from "../types";
-import { Workspace } from "@/features/workspaces/types";
+import { db } from "@/db";
+import { members, notifications, tasks, workspaces } from "@/db/schema";
+import { toDocument } from "@/db/mappers";
+import { createId } from "@/lib/id";
+import { getClerkUsersByIds } from "@/lib/clerk-user";
+import { MemberRole } from "../types";
 import { getIsOwner } from "@/features/auth/server/queries";
 
 const app = new Hono()
@@ -25,13 +21,10 @@ const app = new Hono()
       z.object({ workspaceId: z.string(), limit: z.string().nullish() }),
     ),
     async (c) => {
-      const { users } = await createAdminClient();
-      const databases = c.get("databases");
       const user = c.get("user");
       const { workspaceId, limit } = c.req.valid("query");
 
       const member = await getMember({
-        databases,
         workspaceId,
         userId: user.$id,
       });
@@ -40,69 +33,69 @@ const app = new Hono()
         return c.json({ error: "Unauthorized" }, 401);
       }
 
-      const queries = [Query.equal("workspaceId", workspaceId)];
-      if (limit) queries.push(Query.limit(Number(limit)));
+      let query = db
+        .select()
+        .from(members)
+        .where(eq(members.workspaceId, workspaceId))
+        .$dynamic();
 
-      const members = await databases.listDocuments<Member>(
-        DATABASE_ID,
-        MEMBERS_ID,
-        queries,
+      if (limit) {
+        query = query.limit(Number(limit));
+      }
+
+      const memberRows = await query;
+      const clerkUsers = await getClerkUsersByIds(
+        memberRows.map((m) => m.userId),
       );
 
-      const populatedMembers = await Promise.all(
-        members.documents.map(async (member) => {
-          const user = await users.get(member.userId);
+      const populatedMembers = memberRows.map((row) => {
+        const clerkUser = clerkUsers.find((u) => u.id === row.userId);
+        return {
+          ...toDocument(row),
+          role: row.role as MemberRole,
+          name: clerkUser?.name || clerkUser?.email || "Unknown",
+          email: clerkUser?.email || "",
+          userId: row.userId,
+          workspaceId: row.workspaceId,
+        };
+      });
 
-          return {
-            ...member,
-            role: member.role as MemberRole,
-            name: user.name || user.email,
-            email: user.email,
-          };
-        }),
-      );
-
-      return c.json({ data: { ...members, documents: populatedMembers } });
+      return c.json({
+        data: { documents: populatedMembers, total: populatedMembers.length },
+      });
     },
   )
   .get(":workspaceId", sessionMiddleware, async (c) => {
-    const databases = c.get("databases");
     const user = c.get("user");
     const { workspaceId } = c.req.param();
 
     const member = await getMember({
-      databases,
       workspaceId,
       userId: user.$id,
     });
 
-    return c.json({ data: !!member.$id });
+    return c.json({ data: !!member?.$id });
   })
   .delete(":memberId", sessionMiddleware, async (c) => {
     const { memberId } = c.req.param();
     const user = c.get("user");
-    const databases = c.get("databases");
 
-    //   check is the member is in database or not
-    const memberToDelete = await databases.getDocument<Member>(
-      DATABASE_ID,
-      MEMBERS_ID,
-      memberId,
-    );
+    const [memberToDelete] = await db
+      .select()
+      .from(members)
+      .where(eq(members.id, memberId))
+      .limit(1);
 
     if (!memberToDelete) {
       return c.json({ error: "User not found to delete" }, 400);
     }
 
-    const allMembersInWorkspace = await databases.listDocuments(
-      DATABASE_ID,
-      MEMBERS_ID,
-      [Query.equal("workspaceId", memberToDelete.workspaceId)],
-    );
+    const allMembersInWorkspace = await db
+      .select()
+      .from(members)
+      .where(eq(members.workspaceId, memberToDelete.workspaceId));
 
-    //   find myself to check if I am a member of this workspace
     const member = await getMember({
-      databases,
       workspaceId: memberToDelete.workspaceId,
       userId: user.$id,
     });
@@ -111,69 +104,56 @@ const app = new Hono()
       return c.json({ error: "Unauthorized" }, 401);
     }
 
-    if (member.$id !== memberToDelete.$id && member.role !== MemberRole.ADMIN) {
+    if (member.$id !== memberToDelete.id && member.role !== MemberRole.ADMIN) {
       return c.json({ error: "Unauthorized" }, 401);
     }
 
-    if (allMembersInWorkspace.total === 1) {
+    if (allMembersInWorkspace.length === 1) {
       return c.json({ error: "Cannot delete the only member" }, 400);
     }
 
-    // check is the member is creator of the workspace
-    const workspace = await databases.getDocument<Workspace>(
-      DATABASE_ID,
-      WORKSPACES_ID,
-      memberToDelete.workspaceId,
-    );
-    if (workspace.userId === memberId) {
+    const [workspace] = await db
+      .select()
+      .from(workspaces)
+      .where(eq(workspaces.id, memberToDelete.workspaceId))
+      .limit(1);
+
+    if (!workspace) {
+      return c.json({ error: "Workspace not found" }, 404);
+    }
+
+    if (workspace.userId === memberToDelete.userId) {
       return c.json({ error: "Cannot delete the creator of workspace" }, 400);
     }
 
-    // delete all tasks under this workspace that was assigned to this member
-    const tasks = await databases.listDocuments(DATABASE_ID, TASKS_ID, [
-      Query.and([
-        Query.equal("assigneeId", memberId),
-        Query.equal("workspaceId", memberToDelete.workspaceId),
-      ]),
-    ]);
-    if (tasks.total) {
-      for (const task of tasks.documents) {
-        await databases.deleteDocument(DATABASE_ID, TASKS_ID, task.$id);
-      }
-    }
+    await db
+      .delete(tasks)
+      .where(
+        and(
+          eq(tasks.assigneeId, memberToDelete.userId),
+          eq(tasks.workspaceId, memberToDelete.workspaceId),
+        ),
+      );
 
-    // delete all notification where to = memberId and workspaceId = this workspaceId
-    const notifications = await databases.listDocuments(
-      DATABASE_ID,
-      NOTIFICATIONS_ID,
-      [
-        Query.and([
-          Query.equal("workspaceId", memberToDelete.workspaceId),
-          Query.equal("to", memberId),
-        ]),
-      ],
-    );
-    if (notifications.total) {
-      for (const notification of notifications.documents) {
-        await databases.deleteDocument(
-          DATABASE_ID,
-          NOTIFICATIONS_ID,
-          notification.$id,
-        );
-      }
-    }
+    await db
+      .delete(notifications)
+      .where(
+        and(
+          eq(notifications.workspaceId, memberToDelete.workspaceId),
+          eq(notifications.to, memberToDelete.userId),
+        ),
+      );
 
-    //   finally delete the member
-    await databases.deleteDocument(DATABASE_ID, MEMBERS_ID, memberId);
+    await db.delete(members).where(eq(members.id, memberId));
 
-    // notify this member
-    await databases.createDocument(DATABASE_ID, NOTIFICATIONS_ID, ID.unique(), {
-      workspaceId: workspace.$id,
+    await db.insert(notifications).values({
+      id: createId(),
+      workspaceId: workspace.id,
       to: memberToDelete.userId,
       message: `Admin remove you from ${workspace.name} workspace.`,
     });
 
-    return c.json({ data: { $id: memberToDelete.$id } });
+    return c.json({ data: { $id: memberToDelete.id } });
   })
   .patch(
     ":memberId",
@@ -183,28 +163,23 @@ const app = new Hono()
       const { memberId } = c.req.param();
       const { role } = c.req.valid("json");
       const user = c.get("user");
-      const databases = c.get("databases");
 
-      //   check is the member is in database or not
-      const memberToUpdate = await databases.getDocument<Member>(
-        DATABASE_ID,
-        MEMBERS_ID,
-        memberId,
-      );
+      const [memberToUpdate] = await db
+        .select()
+        .from(members)
+        .where(eq(members.id, memberId))
+        .limit(1);
 
       if (!memberToUpdate) {
         return c.json({ error: "User not found to delete" }, 400);
       }
 
-      const allMembersInWorkspace = await databases.listDocuments(
-        DATABASE_ID,
-        MEMBERS_ID,
-        [Query.equal("workspaceId", memberToUpdate.workspaceId)],
-      );
+      const allMembersInWorkspace = await db
+        .select()
+        .from(members)
+        .where(eq(members.workspaceId, memberToUpdate.workspaceId));
 
-      //   find myself to check if I am a member of this workspace
       const member = await getMember({
-        databases,
         workspaceId: memberToUpdate.workspaceId,
         userId: user.$id,
       });
@@ -218,16 +193,20 @@ const app = new Hono()
         return c.json({ error: "Unauthorized to update" }, 401);
       }
 
-      if (allMembersInWorkspace.total === 1) {
+      if (allMembersInWorkspace.length === 1) {
         return c.json({ error: "Cannot downgrade the only member" }, 400);
       }
 
-      // check is the member is creator of the workspace
-      const workspace = await databases.getDocument<Workspace>(
-        DATABASE_ID,
-        WORKSPACES_ID,
-        memberToUpdate.workspaceId,
-      );
+      const [workspace] = await db
+        .select()
+        .from(workspaces)
+        .where(eq(workspaces.id, memberToUpdate.workspaceId))
+        .limit(1);
+
+      if (!workspace) {
+        return c.json({ error: "Workspace not found" }, 404);
+      }
+
       if (workspace.userId === memberToUpdate.userId) {
         return c.json(
           { error: "Cannot downgrade the owner of workspace" },
@@ -235,28 +214,23 @@ const app = new Hono()
         );
       }
 
-      // finally update
-      await databases.updateDocument(DATABASE_ID, MEMBERS_ID, memberId, {
-        role,
+      await db
+        .update(members)
+        .set({ role, updatedAt: new Date() })
+        .where(eq(members.id, memberId));
+
+      await db.insert(notifications).values({
+        id: createId(),
+        workspaceId: workspace.id,
+        message:
+          role === MemberRole.ADMIN
+            ? `${workspace.name} workspace owner make you an admin of this workspace.`
+            : `${workspace.name} workspace owner downgrade you to the general member of this workspace.`,
+        to: memberToUpdate.userId,
+        link: `/workspaces/${workspace.id}/members`,
       });
 
-      // notify the user
-      await databases.createDocument(
-        DATABASE_ID,
-        NOTIFICATIONS_ID,
-        ID.unique(),
-        {
-          workspaceId: workspace.$id,
-          message:
-            role === MemberRole.ADMIN
-              ? `${workspace.name} workspace owner make you an admin of this workspace.`
-              : `${workspace.name} workspace owner downgrade you to the general member of this workspace.`,
-          to: memberToUpdate.userId,
-          link: `/workspaces/${workspace.$id}/members`,
-        },
-      );
-
-      return c.json({ data: { $id: memberToUpdate.$id } });
+      return c.json({ data: { $id: memberToUpdate.id } });
     },
   );
 

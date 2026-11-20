@@ -1,4 +1,5 @@
 "use client";
+import type { AppUser } from "@/types/auth";
 import Image from "next/image";
 
 import { cn } from "@/lib/utils";
@@ -12,7 +13,7 @@ import { deleteCallById } from "../server/actions";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useGetUserIsAdmin } from "@/features/workspaces/api/use-get-user-isAdmin";
-import { Models } from "node-appwrite";
+
 
 interface MeetingCardProps {
   title: string;
@@ -25,7 +26,7 @@ interface MeetingCardProps {
   link: string;
   type: "call" | "recordings";
   id: string;
-  user: Models.User<Models.Preferences>;
+  user: AppUser;
 }
 
 const MeetingCard = ({

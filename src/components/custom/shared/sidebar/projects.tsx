@@ -1,4 +1,5 @@
 "use client";
+import type { AppUser } from "@/types/auth";
 
 import { Button } from "@/components/ui/button";
 import { DEFAULT_VALUES } from "@/constant/values";
@@ -14,11 +15,11 @@ import { cn } from "@/lib/utils";
 import { Loader } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Models } from "node-appwrite";
+
 import { RiAddCircleFill } from "react-icons/ri";
 
 interface Props {
-  user: Models.User<Models.Preferences>;
+  user: AppUser;
   isOwner: boolean;
   workspace: Workspace;
 }

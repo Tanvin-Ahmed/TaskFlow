@@ -1,4 +1,5 @@
 "use client";
+import type { AppUser } from "@/types/auth";
 import ResponsiveModal from "@/components/custom/dashboard/responsive-modal";
 import useProjectId from "@/features/projects/hooks/use-project-id";
 import useShareDocModal from "../hooks/use-share-doc-modal";
@@ -34,7 +35,7 @@ import UserTypeSelector from "./user-type-selector";
 import { updateDocAccessSchema } from "../schema";
 import { useUpdateDoc } from "../api/use-update-doc";
 import { useEffect, useState } from "react";
-import { Models } from "node-appwrite";
+
 
 const animatedComponents = makeAnimated();
 
@@ -93,7 +94,7 @@ const ShareModal = ({ collaborators, creatorId, creatorEmail }: Props) => {
   const { mutate, isPending } = useUpdateDoc();
 
   const [assigneesToShow, setAssigneesToShow] = useState<
-    Partial<Models.User<Models.Preferences>>[]
+    Partial<AppUser>[]
   >([]);
 
   useEffect(() => {

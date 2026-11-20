@@ -1,4 +1,5 @@
 "use client";
+import type { AppUser } from "@/types/auth";
 import {
   AlarmClock,
   Calendar,
@@ -12,7 +13,7 @@ import HomeCard from "./home-card";
 import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import MeetingModal from "./meeting-modal";
-import { Models } from "node-appwrite";
+
 import { Call, useStreamVideoClient } from "@stream-io/video-react-sdk";
 import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
@@ -72,7 +73,7 @@ const cardData = [
 ];
 
 interface Props {
-  user: Models.User<Models.Preferences>;
+  user: AppUser;
 }
 
 const MeetingTypeList = ({ user }: Props) => {

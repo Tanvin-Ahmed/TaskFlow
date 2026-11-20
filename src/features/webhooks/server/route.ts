@@ -1,10 +1,11 @@
-import { DATABASE_ID, USER_PAYMENT_STATUS_ID } from "@/config";
 import { stripe } from "@/features/pricing/server/stripe";
 import { PaymentStatus } from "@/features/pricing/types";
-import { createAdminClient } from "@/lib/appwrite";
 import { Hono } from "hono";
-import { ID, Query } from "node-appwrite";
+import { eq } from "drizzle-orm";
 import Stripe from "stripe";
+import { db } from "@/db";
+import { userPaymentStatus } from "@/db/schema";
+import { createId } from "@/lib/id";
 
 async function upsertProStatus({
   userId,
@@ -13,45 +14,43 @@ async function upsertProStatus({
   userId?: string;
   subscription: Stripe.Subscription;
 }) {
-  const { databases } = await createAdminClient();
-
   let existing = userId
-    ? await databases.listDocuments(DATABASE_ID, USER_PAYMENT_STATUS_ID, [
-        Query.equal("userId", userId),
-      ])
-    : await databases.listDocuments(DATABASE_ID, USER_PAYMENT_STATUS_ID, [
-        Query.equal("stripeSubscriptionId", subscription.id),
-      ]);
+    ? await db
+        .select()
+        .from(userPaymentStatus)
+        .where(eq(userPaymentStatus.userId, userId))
+        .limit(1)
+    : await db
+        .select()
+        .from(userPaymentStatus)
+        .where(eq(userPaymentStatus.stripeSubscriptionId, subscription.id))
+        .limit(1);
 
-  // Fallback: find by subscription id if userId lookup missed.
-  if (!existing.total && userId) {
-    existing = await databases.listDocuments(
-      DATABASE_ID,
-      USER_PAYMENT_STATUS_ID,
-      [Query.equal("stripeSubscriptionId", subscription.id)],
-    );
+  if (!existing.length && userId) {
+    existing = await db
+      .select()
+      .from(userPaymentStatus)
+      .where(eq(userPaymentStatus.stripeSubscriptionId, subscription.id))
+      .limit(1);
   }
 
   const payload = {
-    paymentStatus: PaymentStatus.Pro,
+    paymentStatus: PaymentStatus.Pro as const,
     stripeSubscriptionId: subscription.id,
     stripeCustomerId: subscription.customer as string,
     stripePriceId: subscription.items.data[0]?.price.id,
-    stripeCurrentPeriodEnd: new Date(
-      subscription.current_period_end * 1000,
-    ).toISOString(),
+    stripeCurrentPeriodEnd: new Date(subscription.current_period_end * 1000),
+    updatedAt: new Date(),
   };
 
-  if (existing.total) {
-    await databases.updateDocument(
-      DATABASE_ID,
-      USER_PAYMENT_STATUS_ID,
-      existing.documents[0].$id,
-      {
+  if (existing.length) {
+    await db
+      .update(userPaymentStatus)
+      .set({
         ...payload,
         ...(userId ? { userId } : {}),
-      },
-    );
+      })
+      .where(eq(userPaymentStatus.id, existing[0].id));
     return;
   }
 
@@ -59,15 +58,11 @@ async function upsertProStatus({
     throw new Error("Cannot create payment status without userId");
   }
 
-  await databases.createDocument(
-    DATABASE_ID,
-    USER_PAYMENT_STATUS_ID,
-    ID.unique(),
-    {
-      userId,
-      ...payload,
-    },
-  );
+  await db.insert(userPaymentStatus).values({
+    id: createId(),
+    userId,
+    ...payload,
+  });
 }
 
 const app = new Hono().post("/stripe", async (c) => {

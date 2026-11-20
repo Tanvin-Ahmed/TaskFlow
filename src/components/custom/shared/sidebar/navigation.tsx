@@ -1,4 +1,5 @@
 "use client";
+import type { AppUser } from "@/types/auth";
 import { cn } from "@/lib/utils";
 import { MdOutlineDashboard, MdDashboard } from "react-icons/md";
 import { Settings, UsersIcon, LoaderIcon } from "lucide-react";
@@ -6,7 +7,7 @@ import Link from "next/link";
 import { GoCheckCircle, GoCheckCircleFill } from "react-icons/go";
 import useWorkspaceId from "@/features/workspaces/hooks/use-workspace-id";
 import { usePathname } from "next/navigation";
-import { Models } from "node-appwrite";
+
 import { useGetUserIsAdmin } from "@/features/workspaces/api/use-get-user-isAdmin";
 
 const routes = [
@@ -37,7 +38,7 @@ const routes = [
 ];
 
 interface Props {
-  user: Models.User<Models.Preferences>;
+  user: AppUser;
 }
 
 const Navigation = ({ user }: Props) => {

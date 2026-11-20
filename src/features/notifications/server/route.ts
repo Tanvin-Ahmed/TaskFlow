@@ -1,119 +1,102 @@
-import {
-  DATABASE_ID,
-  MEMBERS_ID,
-  NOTIFICATIONS_ID,
-  PROJECTS_ID,
-  TASKS_ID,
-  WORKSPACES_ID,
-} from "@/config";
-import { Member } from "@/features/members/types";
-import { Project } from "@/features/projects/types";
-import { Task } from "@/features/tasks/types";
-import { Workspace } from "@/features/workspaces/types";
 import { sessionMiddleware } from "@/lib/session-middleware";
 import { Hono } from "hono";
-import { Query } from "node-appwrite";
-import { Notification, PopulatedNotification } from "../type";
+import { and, desc, eq, inArray, isNull, or } from "drizzle-orm";
+import { db } from "@/db";
+import {
+  members,
+  notifications,
+  projects,
+  tasks,
+  workspaces,
+} from "@/db/schema";
+import { toDocument } from "@/db/mappers";
+import { PopulatedNotification } from "../type";
 
-const getWorkspaceRequiredInfo = (workspace: Workspace) => {
+const getWorkspaceRequiredInfo = (workspace?: {
+  id: string;
+  name: string;
+  imageUrl: string | null;
+}) => {
   return {
-    $id: workspace?.$id,
-    name: workspace?.name,
-    imageUrl: workspace?.imageUrl,
+    $id: workspace?.id || "",
+    name: workspace?.name || "",
+    imageUrl: workspace?.imageUrl ?? undefined,
   };
 };
-const getProjectRequiredInfo = (project: Project) => {
+
+const getProjectRequiredInfo = (project?: {
+  id: string;
+  name: string;
+  imageUrl: string | null;
+}) => {
   return {
-    $id: project?.$id,
-    name: project?.name,
-    imageUrl: project?.imageUrl,
+    $id: project?.id || "",
+    name: project?.name || "",
+    imageUrl: project?.imageUrl ?? undefined,
   };
 };
 
 const app = new Hono().get("/", sessionMiddleware, async (c) => {
-  const databases = c.get("databases");
   const user = c.get("user");
 
-  // ******** GET ALL WORKSPACES AND PROJECTS THAT ARE ATTACHED WITH THIS USER ******** //
-  // get all workspaces information where the current user added
-  const memberOfWorkspace = await databases.listDocuments<Member>(
-    DATABASE_ID,
-    MEMBERS_ID,
-    [Query.equal("userId", user.$id)],
-  );
-  const workspaceIds = memberOfWorkspace.documents.map((m) => m.workspaceId);
+  const memberOfWorkspace = await db
+    .select()
+    .from(members)
+    .where(eq(members.userId, user.$id));
 
-  let workspaces;
-  if (workspaceIds.length) {
-    workspaces = await databases.listDocuments<Workspace>(
-      DATABASE_ID,
-      WORKSPACES_ID,
-      [Query.contains("$id", workspaceIds)],
-    );
-  }
+  const workspaceIds = memberOfWorkspace.map((m) => m.workspaceId);
 
-  // get all projects information where the current user added
-  const tasks = await databases.listDocuments<Task>(DATABASE_ID, TASKS_ID, [
-    Query.equal("assigneeId", user.$id),
-  ]);
+  const workspaceRows = workspaceIds.length
+    ? await db
+        .select()
+        .from(workspaces)
+        .where(inArray(workspaces.id, workspaceIds))
+    : [];
+
+  const assignedTasks = await db
+    .select()
+    .from(tasks)
+    .where(eq(tasks.assigneeId, user.$id));
+
   const uniqueProjectIds = Array.from(
-    new Set(tasks.documents.map((doc) => doc.projectId)),
+    new Set(assignedTasks.map((doc) => doc.projectId)),
   );
 
-  let projects;
+  const projectRows = uniqueProjectIds.length
+    ? await db
+        .select()
+        .from(projects)
+        .where(inArray(projects.id, uniqueProjectIds))
+    : [];
+
+  const orConditions = [eq(notifications.to, user.$id)];
+
   if (uniqueProjectIds.length) {
-    projects = await databases.listDocuments<Project>(
-      DATABASE_ID,
-      PROJECTS_ID,
-      [Query.contains("$id", uniqueProjectIds)],
+    orConditions.push(
+      and(
+        isNull(notifications.to),
+        inArray(notifications.projectId, uniqueProjectIds),
+      )!,
     );
   }
 
-  const userAttachedWith = {
-    workspaces: workspaces?.documents ?? [],
-    workspaceIds,
-    projects: projects?.documents ?? [],
-    projectIds: uniqueProjectIds,
-  };
-
-  // **** MAIN LOGIC TO FIND NOTIFICATIONS **** //
-  // write required queries to get unseen notifications
-
-  const orQueries = [Query.equal("to", user.$id)];
-  if (userAttachedWith.projectIds.length) {
-    orQueries.push(
-      Query.and([
-        Query.isNull("to"),
-        Query.contains("projectId", userAttachedWith.projectIds),
-      ]),
-    );
-  }
-  if (userAttachedWith.workspaceIds.length) {
-    orQueries.push(
-      Query.and([
-        Query.isNull("to"),
-        Query.isNull("projectId"),
-        Query.contains("workspaceId", userAttachedWith.workspaceIds),
-      ]),
+  if (workspaceIds.length) {
+    orConditions.push(
+      and(
+        isNull(notifications.to),
+        isNull(notifications.projectId),
+        inArray(notifications.workspaceId, workspaceIds),
+      )!,
     );
   }
 
-  const QueriesForNotification = [Query.orderDesc("$createdAt")];
-  if (orQueries.length > 1) {
-    QueriesForNotification.push(Query.or(orQueries));
-  } else {
-    QueriesForNotification.push(orQueries[0]);
-  }
+  const notificationRows = await db
+    .select()
+    .from(notifications)
+    .where(or(...orConditions))
+    .orderBy(desc(notifications.createdAt));
 
-  // get notifications
-  const notifications = await databases.listDocuments<Notification>(
-    DATABASE_ID,
-    NOTIFICATIONS_ID,
-    QueriesForNotification,
-  );
-
-  // if no notifications are available
-  if (!notifications.total) {
+  if (!notificationRows.length) {
     return c.json({
       data: {
         unseenNotificationCount: 0,
@@ -123,33 +106,42 @@ const app = new Hono().get("/", sessionMiddleware, async (c) => {
     });
   }
 
-  // populate workspace and project data in notifications
-  const populatedNotifications = notifications.documents.map((notification) => {
-    const { workspaceId, projectId, seenBy, ...rest } = notification;
-
-    const workspaceInfo = userAttachedWith.workspaces.find(
-      (workspace) => workspace.$id === workspaceId,
+  const populatedNotifications = notificationRows.map((notification) => {
+    const workspaceInfo = workspaceRows.find(
+      (workspace) => workspace.id === notification.workspaceId,
     );
-    const requiredWorkspaceInfo = getWorkspaceRequiredInfo(workspaceInfo!);
+    const requiredWorkspaceInfo = getWorkspaceRequiredInfo(workspaceInfo);
 
-    let requiredProjectInfo: { $id: string; name: string } | null = null;
-    if (projectId) {
-      const projectInfo = userAttachedWith.projects.find(
-        (project) => project.$id === projectId,
+    let requiredProjectInfo: {
+      $id: string;
+      name: string;
+      imageUrl?: string | null;
+    } | null = null;
+
+    if (notification.projectId) {
+      const projectInfo = projectRows.find(
+        (project) => project.id === notification.projectId,
       );
-
-      if (projectInfo)
+      if (projectInfo) {
         requiredProjectInfo = getProjectRequiredInfo(projectInfo);
+      }
     }
 
-    const populatedNotification = {
-      ...rest,
-      seenBy: seenBy ? (JSON.parse(seenBy.trim()) as string[]) : [],
+    const seenBy = Array.isArray(notification.seenBy)
+      ? notification.seenBy
+      : [];
+
+    return {
+      ...toDocument(notification),
+      message: notification.message,
+      taskId: notification.taskId,
+      to: notification.to,
+      link: notification.link,
+      isMeetingNotification: notification.isMeetingNotification,
+      seenBy,
       workspace: requiredWorkspaceInfo,
       project: requiredProjectInfo,
     };
-
-    return populatedNotification;
   });
 
   return c.json({

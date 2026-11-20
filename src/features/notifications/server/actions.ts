@@ -1,40 +1,44 @@
 "use server";
 
-import { DATABASE_ID, NOTIFICATIONS_ID } from "@/config";
-import { createSessionClient } from "@/lib/appwrite";
-import { ID, Query } from "node-appwrite";
-import { Notification } from "../type";
+import { eq, inArray } from "drizzle-orm";
+import { db } from "@/db";
+import { notifications } from "@/db/schema";
+import { createId } from "@/lib/id";
+import { getCurrent } from "@/features/auth/server/queries";
 
 export const makeUnseenNotificationAsSeen = async (
-  notificationsId: string[],
+  notificationIds: string[],
 ) => {
-  const { databases, account } = await createSessionClient();
-  const user = await account.get();
+  const user = await getCurrent();
+  if (!user) {
+    throw new Error("Unauthorized");
+  }
 
-  const notifications = await databases.listDocuments<Notification>(
-    DATABASE_ID,
-    NOTIFICATIONS_ID,
-    [Query.contains("$id", notificationsId)],
-  );
+  if (!notificationIds.length) {
+    return { success: true };
+  }
+
+  const rows = await db
+    .select()
+    .from(notifications)
+    .where(inArray(notifications.id, notificationIds));
 
   await Promise.all(
-    notifications.documents.map((notification) => {
-      let sendBy = [];
-      if (notification.seenBy) {
-        sendBy = JSON.parse(notification.seenBy) as string[];
-        sendBy.push(user.$id);
-      } else {
-        sendBy.push(user.$id);
-      }
+    rows.map(async (notification) => {
+      const seenBy = Array.isArray(notification.seenBy)
+        ? [...notification.seenBy]
+        : [];
 
-      return databases.updateDocument(
-        DATABASE_ID,
-        NOTIFICATIONS_ID,
-        notification.$id,
-        {
-          seenBy: JSON.stringify(sendBy),
-        },
-      );
+      if (!seenBy.includes(user.$id)) {
+        seenBy.push(user.$id);
+        await db
+          .update(notifications)
+          .set({
+            seenBy,
+            updatedAt: new Date(),
+          })
+          .where(eq(notifications.id, notification.id));
+      }
     }),
   );
 
@@ -52,12 +56,11 @@ interface PushNotificationParams {
 }
 
 export const pushNotification = async (params: PushNotificationParams) => {
-  const { databases, account } = await createSessionClient();
-  const user = await account.get();
-
+  const user = await getCurrent();
   if (!user) return false;
 
-  await databases.createDocument(DATABASE_ID, NOTIFICATIONS_ID, ID.unique(), {
+  await db.insert(notifications).values({
+    id: createId(),
     ...params,
   });
 

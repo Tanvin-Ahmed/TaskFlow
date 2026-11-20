@@ -1,4 +1,5 @@
 "use client";
+import type { AppUser } from "@/types/auth";
 import DottedSeparator from "@/components/custom/shared/dotted-separator";
 import { Button } from "@/components/ui/button";
 import { SettingsIcon } from "lucide-react";
@@ -9,13 +10,13 @@ import { useTheme } from "next-themes";
 import { Member } from "@/features/members/types";
 import MemberAvatar from "@/features/members/components/member-avatar";
 import { useGetUserIsAdmin } from "../api/use-get-user-isAdmin";
-import { Models } from "node-appwrite";
+
 import { useRouter } from "next/navigation";
 
 interface Props {
   data: Member[];
   total: number;
-  user: Models.User<Models.Preferences>;
+  user: AppUser;
 }
 
 const MemberList = ({ data, total, user }: Props) => {

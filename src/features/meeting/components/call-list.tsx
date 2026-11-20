@@ -1,4 +1,5 @@
 "use client";
+import type { AppUser } from "@/types/auth";
 
 import { usePathname, useRouter } from "next/navigation";
 import useGetCalls from "../hooks/use-get-calls";
@@ -9,11 +10,11 @@ import PageLoader from "@/components/custom/shared/page-loader";
 import { toast } from "sonner";
 import { BASE_URL } from "@/config";
 import useWorkspaceId from "@/features/workspaces/hooks/use-workspace-id";
-import { Models } from "node-appwrite";
+
 
 interface Props {
   type: "ended" | "upcoming" | "recordings";
-  user: Models.User<Models.Preferences>;
+  user: AppUser;
 }
 
 const CallList = ({ type, user }: Props) => {

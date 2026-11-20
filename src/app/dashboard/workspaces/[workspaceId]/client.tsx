@@ -1,4 +1,5 @@
 "use client";
+import type { AppUser } from "@/types/auth";
 import Analytics from "@/components/custom/analytics/analytics";
 import PageError from "@/components/custom/shared/page-error";
 import PageLoader from "@/components/custom/shared/page-loader";
@@ -14,10 +15,10 @@ import ProjectList from "@/features/workspaces/components/project-list";
 import TaskList from "@/features/workspaces/components/task-list";
 import useWorkspaceId from "@/features/workspaces/hooks/use-workspace-id";
 import { LoaderIcon } from "lucide-react";
-import { Models } from "node-appwrite";
+
 
 interface Props {
-  user: Models.User<Models.Preferences>;
+  user: AppUser;
 }
 
 const WorkspaceIdClient = ({ user }: Props) => {

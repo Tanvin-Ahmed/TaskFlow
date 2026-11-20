@@ -1,4 +1,5 @@
 "use client";
+import type { AppUser } from "@/types/auth";
 import DottedSeparator from "@/components/custom/shared/dotted-separator";
 import { Button } from "@/components/ui/button";
 import { Loader, PlusIcon } from "lucide-react";
@@ -10,7 +11,7 @@ import { Project } from "@/features/projects/types";
 import ProjectAvatar from "@/features/projects/components/project-avatar";
 import { useTheme } from "next-themes";
 import { DEFAULT_VALUES } from "@/constant/values";
-import { Models } from "node-appwrite";
+
 import { useGetSubscription } from "@/features/pricing/api/use-get-subscription";
 import { useGetUserIsAdmin } from "../api/use-get-user-isAdmin";
 import { Workspace } from "../types";
@@ -18,7 +19,7 @@ import { Workspace } from "../types";
 interface Props {
   data: Project[];
   total: number;
-  user: Models.User<Models.Preferences>;
+  user: AppUser;
   isOwner: boolean;
   workspace: Workspace;
 }
