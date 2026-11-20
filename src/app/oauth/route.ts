@@ -1,6 +1,5 @@
 import { AUTH_COOKIE } from "@/features/auth/constant";
 import { createAdminClient } from "@/lib/appwrite";
-import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
@@ -8,18 +7,23 @@ export async function GET(request: NextRequest) {
   const secret = request.nextUrl.searchParams.get("secret");
 
   if (!userId || !secret) {
-    return new NextResponse("Messing fields", { status: 400 });
+    return new NextResponse("Missing fields", { status: 400 });
   }
 
   const { account } = await createAdminClient();
   const session = await account.createSession(userId, secret);
 
-  cookies().set(AUTH_COOKIE, session.secret, {
+  // Cookie must be set on the redirect response; cookies().set() alone
+  // is dropped when returning NextResponse.redirect().
+  const response = NextResponse.redirect(`${request.nextUrl.origin}/`);
+  response.cookies.set(AUTH_COOKIE, session.secret, {
     path: "/",
     // httpOnly: true,
-    sameSite: "strict",
-    secure: true,
+    sameSite: "lax",
+    // secure cookies are not sent over http://localhost
+    secure: process.env.NODE_ENV === "production",
+    maxAge: 60 * 60 * 24 * 30,
   });
 
-  return NextResponse.redirect(`${request.nextUrl.origin}/`);
+  return response;
 }

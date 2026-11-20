@@ -43,9 +43,9 @@ const Sidebar = ({ user }: Props) => {
         <div className={"flex items-center justify-center"}>
           <LoaderIcon className="size-4 animate-spin text-muted-foreground" />
         </div>
-      ) : (
-        <Projects user={user} isOwner={!!isOwner} workspace={workspace!} />
-      )}
+      ) : workspace ? (
+        <Projects user={user} isOwner={!!isOwner} workspace={workspace} />
+      ) : null}
 
       {isLoadingIsOwner ? (
         <div className="flex items-center justify-center">

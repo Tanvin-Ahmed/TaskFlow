@@ -8,6 +8,7 @@ interface Props {
 export const useGetSubscription = ({ userId }: Props) => {
   const query = useQuery({
     queryKey: ["subscription", userId],
+    enabled: !!userId,
     queryFn: async () => {
       const response = await client.api.pricing[":userId"].$get({
         param: { userId },

@@ -7,6 +7,7 @@ import QueryProviders from "@/components/providers/query-provider";
 import { Toaster } from "@/components/ui/sonner";
 import "react-datepicker/dist/react-datepicker.css";
 import LiveBlockProvider from "@/components/providers/liveblock-provider";
+import AppwriteProvider from "@/components/providers/appwrite-provider";
 import "@liveblocks/react-ui/styles.css";
 import "@liveblocks/react-lexical/styles.css";
 
@@ -39,12 +40,14 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <LiveBlockProvider>
-            <QueryProviders>
-              <Toaster />
-              {children}
-            </QueryProviders>
-          </LiveBlockProvider>
+          <AppwriteProvider>
+            <LiveBlockProvider>
+              <QueryProviders>
+                <Toaster />
+                {children}
+              </QueryProviders>
+            </LiveBlockProvider>
+          </AppwriteProvider>
         </ThemeProvider>
       </body>
     </html>

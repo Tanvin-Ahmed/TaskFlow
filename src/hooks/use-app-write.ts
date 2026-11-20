@@ -1,10 +1,7 @@
-import { Account, Client, Databases } from "appwrite";
+import { Account, Databases } from "appwrite";
+import { client } from "@/lib/appwrite-client";
 
 const useAppWrite = () => {
-  const client = new Client()
-    .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT!)
-    .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT!);
-
   // const session = Cookies.get("task-flow-session");
 
   // if (!session) {
