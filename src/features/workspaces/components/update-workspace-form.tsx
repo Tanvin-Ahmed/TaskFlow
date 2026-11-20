@@ -15,10 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import DottedSeparator from "@/components/custom/shared/dotted-separator";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { ArrowLeftIcon, CopyIcon, ImageIcon, Loader } from "lucide-react";
-import { ChangeEvent, useRef } from "react";
-import Image from "next/image";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { ArrowLeftIcon, CopyIcon, Loader } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Workspace } from "../types";
 import { useUpdateWorkspace } from "../api/use-update-workspace";
@@ -51,23 +48,12 @@ const UpdateWorkspaceForm = ({ onCancel, initialValue }: Props) => {
     useResetInviteCode();
   const { mutate, isPending } = useUpdateWorkspace();
 
-  const inputRef = useRef<HTMLInputElement>(null);
-
   const form = useForm<z.infer<typeof updateWorkspaceSchema>>({
     resolver: zodResolver(updateWorkspaceSchema),
     defaultValues: {
-      ...initialValue,
-      image: initialValue.imageUrl ?? "",
+      name: initialValue.name,
     },
   });
-
-  const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-
-    if (file) {
-      form.setValue("image", file);
-    }
-  };
 
   const handleDelete = async () => {
     const ok = await confirm();
@@ -86,12 +72,10 @@ const UpdateWorkspaceForm = ({ onCancel, initialValue }: Props) => {
   };
 
   const onSubmit = (values: z.infer<typeof updateWorkspaceSchema>) => {
-    const finalValues = {
-      ...values,
-      image: values.image instanceof File ? values.image : "",
-    };
-
-    mutate({ form: finalValues, param: { workspaceId: initialValue.$id } });
+    mutate({
+      form: values,
+      param: { workspaceId: initialValue.$id },
+    });
   };
 
   const fullInviteLink = `${window.location.origin}/workspaces/${initialValue.$id}/join/${initialValue.inviteCode}`;
@@ -113,10 +97,8 @@ const UpdateWorkspaceForm = ({ onCancel, initialValue }: Props) => {
 
   return (
     <div className="flex flex-col gap-y-4">
-      <ConfirmationDialog /> {/*open confirmation modal before delete*/}
-      <ConfirmationResetDialog />{" "}
-      {/*open confirmation modal before reset invitation code */}
-      {/* update workspace */}
+      <ConfirmationDialog />
+      <ConfirmationResetDialog />
       <Card className="h-full w-full border-none bg-neutral-50 shadow-none dark:bg-purple-900/5">
         <CardHeader className="flex flex-row items-center gap-x-4 space-y-0 p-7">
           <Button
@@ -141,78 +123,22 @@ const UpdateWorkspaceForm = ({ onCancel, initialValue }: Props) => {
         <CardContent className="p-7">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-              <div className="flex flex-col gap-y-4">
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Workspace name</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Enter a workspace name"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="image"
-                  render={({ field }) => (
-                    <div className="flex flex-col gap-y-2">
-                      <div className="flex items-center gap-x-5">
-                        {field.value ? (
-                          <div className="relative size-[72px] overflow-hidden rounded-md">
-                            <Image
-                              alt="selected img"
-                              src={
-                                field.value instanceof File
-                                  ? URL.createObjectURL(field.value)
-                                  : field.value
-                              }
-                              fill
-                              className="object-cover"
-                            />
-                          </div>
-                        ) : (
-                          <Avatar className="size-[72px]">
-                            <AvatarFallback>
-                              <ImageIcon className="size-[36px] text-neutral-400" />
-                            </AvatarFallback>
-                          </Avatar>
-                        )}
-                        <div className="flex flex-col">
-                          <p className="text-sm">Workspace Icon</p>
-                          <p className="text-sm text-muted-foreground">
-                            JPG, PNG, SVG or JPEG, max 1MB
-                          </p>
-                          <input
-                            type="file"
-                            className="hidden"
-                            accept=".jpg, .png, .jpeg, .svg"
-                            ref={inputRef}
-                            disabled={isPending}
-                            onChange={handleImageChange}
-                          />
-                          <Button
-                            type="button"
-                            disabled={isPending}
-                            variant={"teritary"}
-                            size={"xs"}
-                            className="mt-2 w-fit"
-                            onClick={() => inputRef.current?.click()}
-                          >
-                            Upload Image
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                />
-              </div>
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Workspace name</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Enter a workspace name"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <DottedSeparator className="py-7" />
               <div className="flex flex-wrap items-center justify-between gap-4">
                 <Button
@@ -232,7 +158,6 @@ const UpdateWorkspaceForm = ({ onCancel, initialValue }: Props) => {
           </Form>
         </CardContent>
       </Card>
-      {/* reset invite code */}
       <Card className="h-full w-full border-none bg-neutral-50 shadow-none dark:bg-purple-900/5">
         <CardContent className="p-7">
           <div className="flex flex-col">
@@ -273,7 +198,6 @@ const UpdateWorkspaceForm = ({ onCancel, initialValue }: Props) => {
           </div>
         </CardContent>
       </Card>
-      {/* delete workspace */}
       <Card className="h-full w-full border-none bg-neutral-50 shadow-none dark:bg-purple-900/5">
         <CardContent className="p-7">
           <div className="flex flex-col">

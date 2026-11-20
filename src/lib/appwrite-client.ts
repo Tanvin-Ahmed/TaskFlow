@@ -1,8 +1,13 @@
 import { Client } from "appwrite";
 
 const client = new Client()
-  .setEndpoint("https://fra.cloud.appwrite.io/v1")
-  .setProject("670a7fd90005842bfcf8");
+  .setEndpoint(
+    process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT ||
+      "https://fra.cloud.appwrite.io/v1",
+  )
+  .setProject(
+    process.env.NEXT_PUBLIC_APPWRITE_PROJECT || "670a7fd90005842bfcf8",
+  );
 
 export { client };
 

@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { signInSchema, signUpSchema } from "@/features/auth/schema";
 import { createAdminClient } from "@/lib/appwrite";
-import { ID, Permission, Query, Role } from "node-appwrite";
+import { ID, Query } from "node-appwrite";
 import { deleteCookie, setCookie } from "hono/cookie";
 import { AUTH_COOKIE } from "../constant";
 import { sessionMiddleware } from "@/lib/session-middleware";
@@ -11,10 +11,8 @@ import {
   MEMBERS_ID,
   PROJECTS_ID,
   TASKS_ID,
-  USER_PAYMENT_STATUS_ID,
   WORKSPACES_ID,
 } from "@/config";
-import { PaymentStatus } from "@/features/pricing/types";
 import { Member } from "@/features/members/types";
 import { Workspace } from "@/features/workspaces/types";
 import { Task } from "@/features/tasks/types";
@@ -43,38 +41,23 @@ const app = new Hono()
   .post("/sign-up", zValidator("json", signUpSchema), async (c) => {
     const { name, email, password } = c.req.valid("json");
 
-    const { account, databases, users } = await createAdminClient();
+    const { account, users } = await createAdminClient();
 
     const existingUsers = await users.list([Query.equal("email", email)]);
     if (existingUsers.total > 0) {
       return c.json({ error: "User already exists with this email" }, 409);
     }
 
-    const authData = await account.create(ID.unique(), email, password, name);
+    await account.create(ID.unique(), email, password, name);
 
-    await databases.createDocument(
-      DATABASE_ID,
-      USER_PAYMENT_STATUS_ID,
-      ID.unique(),
-      {
-        userId: authData.$id,
-        paymentStatus: PaymentStatus.Normal,
-      },
-      [
-        Permission.read(Role.any()),
-        Permission.update(Role.any()),
-        Permission.update(Role.any()),
-        Permission.delete(Role.any()),
-        Permission.delete(Role.any()),
-      ],
-    );
-
-    // create payment user info
-
+    // Create the session before any DB writes so the auth cookie is always set.
+    // Payment status is created on the home page via createUserPaymentStatusInBD
+    // using the user session (avoids needing documents.write on the API key).
     const session = await account.createEmailPasswordSession(email, password);
 
     setCookie(c, AUTH_COOKIE, session.secret, {
       path: "/",
+      // Readable by the browser Appwrite SDK (realtime subscriptions).
       // httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",

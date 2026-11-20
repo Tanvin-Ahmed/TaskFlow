@@ -1,15 +1,25 @@
 "use client";
 
-import "@/lib/appwrite-client";
+import { useEffect } from "react";
+import Cookies from "js-cookie";
+import { client } from "@/lib/appwrite-client";
+import { AUTH_COOKIE } from "@/features/auth/constant";
 
 /**
- * Imports the Appwrite web client once on the client so `client.ping()`
- * runs when the app starts and setup can be confirmed.
+ * Keeps the browser Appwrite SDK in sync with the server session cookie
+ * so realtime subscriptions (e.g. notifications) are authenticated.
  */
 export default function AppwriteProvider({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  useEffect(() => {
+    const session = Cookies.get(AUTH_COOKIE);
+    if (session) {
+      client.setSession(session);
+    }
+  }, []);
+
   return <>{children}</>;
 }

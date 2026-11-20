@@ -4,7 +4,6 @@ import { updateWorkspaceSchema, workspaceSchema } from "../schema";
 import { sessionMiddleware } from "@/lib/session-middleware";
 import {
   DATABASE_ID,
-  IMAGES_BUCKET_ID,
   MEMBERS_ID,
   PROJECTS_ID,
   TASKS_ID,
@@ -302,28 +301,8 @@ const app = new Hono()
     async (c) => {
       const databases = c.get("databases");
       const user = c.get("user");
-      const storage = c.get("storage");
 
-      const { name, image } = c.req.valid("form");
-
-      let uploadedImageUrl: string | undefined;
-      let imageId: string | undefined;
-
-      if (image instanceof File) {
-        const file = await storage.createFile(
-          IMAGES_BUCKET_ID,
-          ID.unique(),
-          image,
-        );
-        imageId = file.$id;
-
-        const arrayBuffer = await storage.getFilePreview(
-          IMAGES_BUCKET_ID,
-          file.$id,
-        );
-
-        uploadedImageUrl = `data:image/png;base64,${Buffer.from(arrayBuffer).toString("base64")}`;
-      }
+      const { name } = c.req.valid("form");
 
       const workspace = await databases.createDocument(
         DATABASE_ID,
@@ -332,8 +311,6 @@ const app = new Hono()
         {
           name,
           userId: user.$id,
-          imageUrl: uploadedImageUrl,
-          imageId,
           inviteCode: generateInviteCode(8),
         },
       );
@@ -452,11 +429,10 @@ const app = new Hono()
     sessionMiddleware,
     async (c) => {
       const databases = c.get("databases");
-      const storage = c.get("storage");
       const user = c.get("user");
 
       const { workspaceId } = c.req.param();
-      const { name, image } = c.req.valid("form");
+      const { name } = c.req.valid("form");
 
       const member = await getMember({
         databases,
@@ -468,47 +444,12 @@ const app = new Hono()
         return c.json({ error: "Unauthorized" }, 401);
       }
 
-      const existingWorkspace = await databases.getDocument<Workspace>(
-        DATABASE_ID,
-        WORKSPACES_ID,
-        workspaceId,
-      );
-
-      let uploadedImageUrl: string | undefined;
-      let imageId: string | undefined;
-
-      if (image instanceof File) {
-        // delete existing image from bucket
-        if (existingWorkspace.imageId) {
-          await storage.deleteFile(IMAGES_BUCKET_ID, existingWorkspace.imageId);
-        }
-
-        const file = await storage.createFile(
-          IMAGES_BUCKET_ID,
-          ID.unique(),
-          image,
-        );
-
-        imageId = file.$id;
-
-        const arrayBuffer = await storage.getFilePreview(
-          IMAGES_BUCKET_ID,
-          file.$id,
-        );
-
-        uploadedImageUrl = `data:image/png;base64,${Buffer.from(arrayBuffer).toString("base64")}`;
-      } else {
-        uploadedImageUrl = image;
-      }
-
       const workspace = await databases.updateDocument(
         DATABASE_ID,
         WORKSPACES_ID,
         workspaceId,
         {
           name,
-          imageUrl: uploadedImageUrl,
-          imageId: imageId ?? existingWorkspace?.imageId,
         },
       );
 
@@ -518,7 +459,6 @@ const app = new Hono()
   .delete("/:workspaceId", sessionMiddleware, async (c) => {
     const databases = c.get("databases");
     const user = c.get("user");
-    const storage = c.get("storage");
 
     const { workspaceId } = c.req.param();
 
@@ -553,16 +493,6 @@ const app = new Hono()
       [Query.equal("workspaceId", workspaceId)],
     );
     if (projects.total) {
-      const deleteAllImagePromises = projects.documents
-        .map((project) =>
-          project?.imageId
-            ? storage.deleteFile(IMAGES_BUCKET_ID, project.imageId)
-            : false,
-        )
-        .filter(Boolean);
-
-      await Promise.all(deleteAllImagePromises);
-
       const deletePromises = projects.documents.map((project) =>
         databases.deleteDocument(DATABASE_ID, PROJECTS_ID, project.$id),
       );
@@ -580,17 +510,6 @@ const app = new Hono()
       );
 
       await Promise.all(deletePromises);
-    }
-
-    // finally delete the workspace
-    const workspace = await databases.getDocument<Workspace>(
-      DATABASE_ID,
-      WORKSPACES_ID,
-      workspaceId,
-    );
-
-    if (workspace?.imageId) {
-      await storage.deleteFile(IMAGES_BUCKET_ID, workspace.imageId);
     }
 
     await databases.deleteDocument(DATABASE_ID, WORKSPACES_ID, workspaceId);

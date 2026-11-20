@@ -1,6 +1,5 @@
 import {
   DATABASE_ID,
-  IMAGES_BUCKET_ID,
   NOTIFICATIONS_ID,
   PROJECTS_ID,
   TASKS_ID,
@@ -302,10 +301,9 @@ const app = new Hono()
     zValidator("form", createProjectSchema),
     async (c) => {
       const databases = c.get("databases");
-      const storage = c.get("storage");
       const user = c.get("user");
 
-      const { name, image, workspaceId } = c.req.valid("form");
+      const { name, workspaceId } = c.req.valid("form");
 
       // if the user is not the member of the workspace then he/she is not allowed to create a new project under this workspace
       const workspaceMember = await getMember({
@@ -332,26 +330,6 @@ const app = new Hono()
         );
       }
 
-      let uploadedImageUrl: string | undefined;
-      let imageId: string | undefined;
-
-      if (image instanceof File) {
-        const file = await storage.createFile(
-          IMAGES_BUCKET_ID,
-          ID.unique(),
-          image,
-        );
-
-        imageId = file.$id;
-
-        const arrayBuffer = await storage.getFilePreview(
-          IMAGES_BUCKET_ID,
-          file.$id,
-        );
-
-        uploadedImageUrl = `data:image/png;base64,${Buffer.from(arrayBuffer).toString("base64")}`;
-      }
-
       const project = await databases.createDocument<Project>(
         DATABASE_ID,
         PROJECTS_ID,
@@ -359,9 +337,7 @@ const app = new Hono()
         {
           name,
           workspaceId,
-          imageUrl: uploadedImageUrl,
           userId: user.$id,
-          imageId,
         },
       );
 
@@ -374,13 +350,11 @@ const app = new Hono()
     sessionMiddleware,
     async (c) => {
       const databases = c.get("databases");
-      const storage = c.get("storage");
       const user = c.get("user");
 
       const { projectId } = c.req.param();
       const {
         name,
-        image,
         docs,
         canvas,
         isDocCreated,
@@ -413,41 +387,12 @@ const app = new Hono()
         );
       }
 
-      let uploadedImageUrl: string | undefined;
-      let imageId: string | undefined;
-
-      if (image instanceof File) {
-        // delete existing image from bucket
-        if (existingProject.imageId) {
-          await storage.deleteFile(IMAGES_BUCKET_ID, existingProject.imageId);
-        }
-
-        const file = await storage.createFile(
-          IMAGES_BUCKET_ID,
-          ID.unique(),
-          image,
-        );
-
-        imageId = file.$id;
-
-        const arrayBuffer = await storage.getFilePreview(
-          IMAGES_BUCKET_ID,
-          file.$id,
-        );
-
-        uploadedImageUrl = `data:image/png;base64,${Buffer.from(arrayBuffer).toString("base64")}`;
-      } else {
-        uploadedImageUrl = image;
-      }
-
       const project = await databases.updateDocument(
         DATABASE_ID,
         PROJECTS_ID,
         projectId,
         {
           name,
-          imageUrl: uploadedImageUrl,
-          imageId: imageId ?? existingProject?.imageId,
           docs,
           canvas,
           isDocCreated: isDocCreated ? Boolean(isDocCreated) : undefined,
@@ -461,7 +406,6 @@ const app = new Hono()
   .delete("/:projectId", sessionMiddleware, async (c) => {
     const databases = c.get("databases");
     const user = c.get("user");
-    const storage = c.get("storage");
 
     const { projectId } = c.req.param();
 
@@ -526,10 +470,6 @@ const app = new Hono()
       );
     }
 
-    // finally delete the project
-    if (existingProject?.imageId) {
-      await storage.deleteFile(IMAGES_BUCKET_ID, existingProject.imageId);
-    }
     await databases.deleteDocument(DATABASE_ID, PROJECTS_ID, projectId);
 
     // notify all assignees of this project

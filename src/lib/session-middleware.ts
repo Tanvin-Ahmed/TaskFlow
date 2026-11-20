@@ -43,12 +43,15 @@ export const sessionMiddleware = createMiddleware<AdditionalContext>(
     const databases = new Databases(client);
     const storage = new Storage(client);
 
-    const user = await account.get();
-
-    c.set("user", user);
-    c.set("account", account);
-    c.set("databases", databases);
-    c.set("storage", storage);
+    try {
+      const user = await account.get();
+      c.set("user", user);
+      c.set("account", account);
+      c.set("databases", databases);
+      c.set("storage", storage);
+    } catch {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
 
     await next();
   },
