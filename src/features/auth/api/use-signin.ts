@@ -18,10 +18,20 @@ export const useSignIn = (callbackUrl = "/dashboard") => {
   const mutation = useMutation<ResponseType, Error, RequestType>({
     mutationFn: async ({ json }) => {
       const res = await client.api.auth["sign-in"]["$post"]({ json });
+      const data = await res.json().catch(() => ({}));
 
-      if (!res.ok) throw new Error("Failed to sign in");
+      if (!res.ok) {
+        const message =
+          typeof data === "object" &&
+          data !== null &&
+          "error" in data &&
+          typeof data.error === "string"
+            ? data.error
+            : "Failed to sign in";
+        throw new Error(message);
+      }
 
-      return await res.json();
+      return data as ResponseType;
     },
     onSuccess: () => {
       toast.success("Welcome back!");
@@ -29,9 +39,10 @@ export const useSignIn = (callbackUrl = "/dashboard") => {
       router.push(callbackUrl);
       router.refresh();
     },
-    onError: () => {
+    onError: (error) => {
       toast.error(
-        "Something went wrong. Please try again with correct credentials!",
+        error.message ||
+          "Something went wrong. Please try again with correct credentials!",
       );
     },
   });

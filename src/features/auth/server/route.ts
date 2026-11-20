@@ -26,45 +26,64 @@ const app = new Hono()
   .post("/sign-in", zValidator("json", signInSchema), async (c) => {
     const { email, password } = c.req.valid("json"); // we can access values like this when we use zValidator
 
-    const { account } = await createAdminClient();
-    const session = await account.createEmailPasswordSession(email, password);
-    setCookie(c, AUTH_COOKIE, session.secret, {
-      path: "/",
-      // httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 60 * 60 * 24 * 30,
-    });
+    try {
+      const { account } = await createAdminClient();
+      const session = await account.createEmailPasswordSession(email, password);
+      setCookie(c, AUTH_COOKIE, session.secret, {
+        path: "/",
+        // httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 60 * 60 * 24 * 30,
+      });
 
-    return c.json({ success: true });
+      return c.json({ success: true });
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Failed to sign in";
+      const status =
+        typeof error === "object" &&
+        error !== null &&
+        "code" in error &&
+        error.code === 401
+          ? 401
+          : 500;
+      return c.json({ error: message }, status);
+    }
   })
   .post("/sign-up", zValidator("json", signUpSchema), async (c) => {
     const { name, email, password } = c.req.valid("json");
 
-    const { account, users } = await createAdminClient();
+    try {
+      const { account, users } = await createAdminClient();
 
-    const existingUsers = await users.list([Query.equal("email", email)]);
-    if (existingUsers.total > 0) {
-      return c.json({ error: "User already exists with this email" }, 409);
+      const existingUsers = await users.list([Query.equal("email", email)]);
+      if (existingUsers.total > 0) {
+        return c.json({ error: "User already exists with this email" }, 409);
+      }
+
+      await account.create(ID.unique(), email, password, name);
+
+      // Create the session before any DB writes so the auth cookie is always set.
+      // Payment status is created on the home page via createUserPaymentStatusInBD
+      // using the user session (avoids needing documents.write on the API key).
+      const session = await account.createEmailPasswordSession(email, password);
+
+      setCookie(c, AUTH_COOKIE, session.secret, {
+        path: "/",
+        // Readable by the browser Appwrite SDK (realtime subscriptions).
+        // httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 60 * 60 * 24 * 30,
+      });
+
+      return c.json({ success: true });
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Failed to sign up";
+      return c.json({ error: message }, 500);
     }
-
-    await account.create(ID.unique(), email, password, name);
-
-    // Create the session before any DB writes so the auth cookie is always set.
-    // Payment status is created on the home page via createUserPaymentStatusInBD
-    // using the user session (avoids needing documents.write on the API key).
-    const session = await account.createEmailPasswordSession(email, password);
-
-    setCookie(c, AUTH_COOKIE, session.secret, {
-      path: "/",
-      // Readable by the browser Appwrite SDK (realtime subscriptions).
-      // httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 60 * 60 * 24 * 30,
-    });
-
-    return c.json({ success: true });
   })
   .delete("/logout", sessionMiddleware, async (c) => {
     const account = c.get("account");
