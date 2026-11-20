@@ -20,8 +20,8 @@ import { PopulatedNotification } from "../type";
 import { makeUnseenNotificationAsSeen } from "../server/actions";
 import { useCurrent } from "@/features/auth/api/use-current";
 
-const Notification = () => {
-  const { data: user, isLoading: isLoadingUser } = useCurrent();
+const AuthenticatedNotification = () => {
+  const { data: user } = useCurrent();
   const queryClient = useQueryClient();
   const { count } = useUnreadInboxNotificationsCount();
   const { data: notifications, isLoading } = useNotifications();
@@ -52,7 +52,6 @@ const Notification = () => {
 
   const handlePopoverChange = (isOpen: boolean) => {
     if (!isOpen && isPopoverOpen) {
-      // Popover was closed, update the notifications
       updateNotificationsAsRead();
     }
     setIsPopoverOpen(isOpen);
@@ -86,10 +85,10 @@ const Notification = () => {
           size={"icon"}
           variant={"outline"}
           className={cn("relative rounded-full", {
-            "animate-pulse": isLoading || isLoadingUser,
+            "animate-pulse": isLoading,
           })}
         >
-          {isLoading || isLoadingUser ? (
+          {isLoading ? (
             <div className="size-4" />
           ) : (
             <>
@@ -121,6 +120,27 @@ const Notification = () => {
       </PopoverContent>
     </Popover>
   );
+};
+
+const Notification = () => {
+  const { data: user, isLoading: isLoadingUser } = useCurrent();
+
+  if (isLoadingUser) {
+    return (
+      <Button
+        size={"icon"}
+        variant={"outline"}
+        className="relative animate-pulse rounded-full"
+        disabled
+      >
+        <div className="size-4" />
+      </Button>
+    );
+  }
+
+  if (!user) return null;
+
+  return <AuthenticatedNotification />;
 };
 
 export default Notification;

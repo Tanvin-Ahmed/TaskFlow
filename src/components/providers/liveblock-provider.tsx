@@ -1,11 +1,7 @@
 "use client";
 
 import { ReactNode } from "react";
-import {
-  LiveblocksProvider,
-  ClientSideSuspense,
-} from "@liveblocks/react/suspense";
-import PageLoader from "../custom/shared/page-loader";
+import { LiveblocksProvider } from "@liveblocks/react/suspense";
 import { getCurrent, getUsers } from "@/features/auth/server/queries";
 import { getDocumentUsers } from "@/features/live-block/server/actions";
 
@@ -33,9 +29,7 @@ const LiveBlockProvider = ({ children }: Props) => {
         return roomUsers;
       }}
     >
-      <ClientSideSuspense fallback={<PageLoader />}>
-        {children}
-      </ClientSideSuspense>
+      {children}
     </LiveblocksProvider>
   );
 };

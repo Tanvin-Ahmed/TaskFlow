@@ -11,9 +11,11 @@ import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import UpgradeButton from "./upgrade-button";
 import { getCurrent } from "@/features/auth/server/queries";
+import { getUserSubscriptionPlan } from "../server/stripe";
 
 const Pricing = async () => {
   const user = await getCurrent();
+  const subscription = user ? await getUserSubscriptionPlan() : null;
 
   return (
     <div className="mb-8 mt-24 text-center">
@@ -132,7 +134,9 @@ const Pricing = async () => {
                       <ArrowRightIcon className="ml-1.5 h-5 w-5" />
                     </Link>
                   ) : user ? (
-                    <UpgradeButton />
+                    <UpgradeButton
+                      isSubscribed={!!subscription?.isSubscribed}
+                    />
                   ) : (
                     <Link
                       href={"/sign-in"}

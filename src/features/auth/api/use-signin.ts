@@ -11,7 +11,7 @@ type RequestType = InferRequestType<
   (typeof client.api.auth)["sign-in"]["$post"]
 >;
 
-export const useSignIn = () => {
+export const useSignIn = (callbackUrl = "/dashboard") => {
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -25,8 +25,9 @@ export const useSignIn = () => {
     },
     onSuccess: () => {
       toast.success("Welcome back!");
-      router.refresh();
       queryClient.invalidateQueries({ queryKey: ["current"] });
+      router.push(callbackUrl);
+      router.refresh();
     },
     onError: () => {
       toast.error(

@@ -39,6 +39,11 @@ const JoinWorkspaceForm = ({ initialValue }: Props) => {
         onSuccess: ({ data }) => {
           router.push(`/dashboard/workspaces/${data.$id}`);
         },
+        onError: (error) => {
+          if (error.message === "Already a member") {
+            router.push(`/dashboard/workspaces/${workspaceId}`);
+          }
+        },
       },
     );
   };

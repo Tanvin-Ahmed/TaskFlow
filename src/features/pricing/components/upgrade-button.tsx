@@ -4,7 +4,11 @@ import { ArrowRight, Loader } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCreateStripeSession } from "../api/use-create-stripe-session";
 
-const UpgradeButton = () => {
+interface Props {
+  isSubscribed?: boolean;
+}
+
+const UpgradeButton = ({ isSubscribed = false }: Props) => {
   const { mutate, isPending } = useCreateStripeSession();
 
   const createStripeSession = () => {
@@ -28,7 +32,8 @@ const UpgradeButton = () => {
         <Loader className="size-4 animate-spin" />
       ) : (
         <>
-          Upgrade now <ArrowRight className="ml-1.5 h-5 w-5" />
+          {isSubscribed ? "Manage subscription" : "Upgrade now"}{" "}
+          <ArrowRight className="ml-1.5 h-5 w-5" />
         </>
       )}
     </Button>

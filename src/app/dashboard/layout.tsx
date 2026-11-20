@@ -1,12 +1,13 @@
 import DashboardNavbar from "@/components/custom/dashboard/shared/navbar";
 import Sidebar from "@/components/custom/shared/sidebar/sidebar";
 import { getCurrent } from "@/features/auth/server/queries";
+import ProCongratsModal from "@/features/pricing/components/pro-congrats-modal";
 import CreateProjectModal from "@/features/projects/components/create-project-modal";
 import CreateTaskModal from "@/features/tasks/components/create-task-modal";
 import UpdateTaskModal from "@/features/tasks/components/update-task-modal";
 import CreateWorkspaceModal from "@/features/workspaces/components/create-workspace-modal";
 import { redirect } from "next/navigation";
-import { ReactNode } from "react";
+import { ReactNode, Suspense } from "react";
 
 type Props = {
   children: ReactNode;
@@ -22,6 +23,9 @@ const DashboardLayout = async ({ children }: Props) => {
       <CreateProjectModal />
       <CreateTaskModal />
       <UpdateTaskModal />
+      <Suspense fallback={null}>
+        <ProCongratsModal />
+      </Suspense>
       <div className="flex h-full w-full">
         <div className="fixed left-0 top-0 hidden h-full overflow-y-auto lg:block lg:w-[264px]">
           <Sidebar user={user} />

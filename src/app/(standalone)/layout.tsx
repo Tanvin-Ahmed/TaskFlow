@@ -2,14 +2,17 @@ import CustomAvatar from "@/components/custom/shared/custom-avatar";
 import { ThemeToggle } from "@/components/custom/shared/theme-button";
 import UserButton from "@/features/auth/components/user-button";
 import Notification from "@/features/notifications/components/notification";
+import { getCurrent } from "@/features/auth/server/queries";
 import Link from "next/link";
-import { ReactNode } from "react";
+import { ReactNode, Suspense } from "react";
 
 interface Props {
   children: ReactNode;
 }
 
-const StandaloneLayout = ({ children }: Props) => {
+const StandaloneLayout = async ({ children }: Props) => {
+  const user = await getCurrent();
+
   return (
     <main className="min-h-screen">
       <div className="mx-auto max-w-screen-2xl p-4">
@@ -21,8 +24,14 @@ const StandaloneLayout = ({ children }: Props) => {
             </h1>
           </Link>
           <div className="flex items-center justify-center gap-2">
-            <UserButton />
-            <Notification />
+            {user ? (
+              <>
+                <UserButton />
+                <Suspense fallback={null}>
+                  <Notification />
+                </Suspense>
+              </>
+            ) : null}
             <ThemeToggle />
           </div>
         </nav>

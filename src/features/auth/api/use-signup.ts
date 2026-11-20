@@ -11,7 +11,7 @@ type RequestType = InferRequestType<
   (typeof client.api.auth)["sign-up"]["$post"]
 >;
 
-export const useSignUp = () => {
+export const useSignUp = (callbackUrl = "/dashboard") => {
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -30,8 +30,9 @@ export const useSignUp = () => {
     },
     onSuccess: () => {
       toast.success("Welcome to Task flow!");
-      router.refresh();
       queryClient.invalidateQueries({ queryKey: ["current"] });
+      router.push(callbackUrl);
+      router.refresh();
     },
     onError: (error: Error) => {
       toast.error(error.message || "Something went wrong. Please try again!");

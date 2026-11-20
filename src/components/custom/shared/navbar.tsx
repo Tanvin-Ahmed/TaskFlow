@@ -14,13 +14,21 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useCurrent } from "@/features/auth/api/use-current";
 import UserButton from "@/features/auth/components/user-button";
 
 const Navbar = () => {
   const { data: user } = useCurrent();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl");
+  const authQuery =
+    callbackUrl && callbackUrl.startsWith("/") && !callbackUrl.startsWith("//")
+      ? `?callbackUrl=${encodeURIComponent(callbackUrl)}`
+      : "";
+  const signInHref = `/sign-in${authQuery}`;
+  const signUpHref = `/sign-up${authQuery}`;
 
   return (
     <header className="sticky top-0 z-50 w-full shadow-md backdrop-blur-sm dark:bg-indigo-900/20">
@@ -44,12 +52,12 @@ const Navbar = () => {
                 <UserButton />
               </>
             ) : pathname === "/sign-up" ? (
-              <Link href={"/sign-in"}>
+              <Link href={signInHref}>
                 <Button>Sign In</Button>
               </Link>
             ) : (
-              <Link href={"/sign-up"}>
-                <Button>Sing Up</Button>
+              <Link href={signUpHref}>
+                <Button>Sign Up</Button>
               </Link>
             )}
 
@@ -73,14 +81,14 @@ const Navbar = () => {
                   <DropdownMenuGroup>
                     {user ? null : pathname === "/sign-up" ? (
                       <DropdownMenuItem>
-                        <Link href={"/sign-in"} className="w-full">
+                        <Link href={signInHref} className="w-full">
                           <Button className="w-full">Sign In</Button>
                         </Link>
                       </DropdownMenuItem>
                     ) : (
                       <DropdownMenuItem>
-                        <Link href={"/sign-up"} className="w-full">
-                          <Button className="w-full">Sing Up</Button>
+                        <Link href={signUpHref} className="w-full">
+                          <Button className="w-full">Sign Up</Button>
                         </Link>
                       </DropdownMenuItem>
                     )}

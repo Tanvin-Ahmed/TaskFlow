@@ -1,5 +1,5 @@
 import Navbar from "@/components/custom/shared/navbar";
-import { ReactNode } from "react";
+import { ReactNode, Suspense } from "react";
 
 type Props = {
   children: ReactNode;
@@ -8,7 +8,9 @@ type Props = {
 const layout = ({ children }: Props) => {
   return (
     <main className="max-h-full min-h-screen">
-      <Navbar />
+      <Suspense fallback={null}>
+        <Navbar />
+      </Suspense>
       <div className="mx-auto max-w-screen-2xl p-4">
         <div className="flex h-full w-full flex-col items-center justify-center pt-4 md:pt-14">
           {children}

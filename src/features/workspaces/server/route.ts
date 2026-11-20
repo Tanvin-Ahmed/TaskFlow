@@ -21,6 +21,7 @@ import { Task, TaskStatus } from "@/features/tasks/types";
 import { Project } from "@/features/projects/types";
 import { PaymentStatus, UserPaymentStatus } from "@/features/pricing/types";
 import { DEFAULT_VALUES } from "@/constant/values";
+import { createAdminClient } from "@/lib/appwrite";
 
 const app = new Hono()
   .get("/", sessionMiddleware, async (c) => {
@@ -370,49 +371,71 @@ const app = new Hono()
         return c.json({ error: "Already a member" }, 409);
       }
 
-      const workspace = await databases.getDocument<Workspace>(
-        DATABASE_ID,
-        WORKSPACES_ID,
-        workspaceId,
-      );
+      let workspace: Workspace;
+      try {
+        workspace = await databases.getDocument<Workspace>(
+          DATABASE_ID,
+          WORKSPACES_ID,
+          workspaceId,
+        );
+      } catch {
+        return c.json({ error: "Workspace not found" }, 404);
+      }
 
-      if (workspace.inviteCode !== code) {
+      if (!workspace.inviteCode || workspace.inviteCode !== code) {
         return c.json({ error: "Invalid invite code" }, 400);
       }
 
-      // check if the creator of workspace is pro or normal user
-      const creatorInfo = await databases.listDocuments<UserPaymentStatus>(
-        DATABASE_ID,
-        USER_PAYMENT_STATUS_ID,
-        [Query.equal("userId", workspace.userId)],
-      );
-      const creator = creatorInfo.documents[0];
-
-      // if creator is pro then join the member
-      if (creator.paymentStatus === PaymentStatus.Pro) {
-        await databases.createDocument(DATABASE_ID, MEMBERS_ID, ID.unique(), {
-          workspaceId,
-          userId: user.$id,
-          role: MemberRole.MEMBER,
-        });
+      // Plan / seat checks — best effort; invitees may lack read on these docs.
+      let enforceMemberLimit = true;
+      try {
+        const creatorInfo = await databases.listDocuments<UserPaymentStatus>(
+          DATABASE_ID,
+          USER_PAYMENT_STATUS_ID,
+          [Query.equal("userId", workspace.userId)],
+        );
+        const creator = creatorInfo.documents[0];
+        if (creator?.paymentStatus === PaymentStatus.Pro) {
+          enforceMemberLimit = false;
+        }
+      } catch {
+        enforceMemberLimit = true;
       }
 
-      // if creator is normal user then check the member limitation then join or reject the member
-      if (creator.paymentStatus === PaymentStatus.Normal) {
-        const membersInWorkspace =
-          await databases.listDocuments<UserPaymentStatus>(
+      if (enforceMemberLimit) {
+        try {
+          const membersInWorkspace = await databases.listDocuments(
             DATABASE_ID,
             MEMBERS_ID,
             [Query.equal("workspaceId", workspaceId)],
           );
 
-        if (
-          membersInWorkspace.total >=
-          DEFAULT_VALUES.FREE_VERSION_MEMBER_COUNT_PER_WORKSPACE
-        ) {
-          return c.json({ error: "User limit exceeded" }, 400);
+          if (
+            membersInWorkspace.total >=
+            DEFAULT_VALUES.FREE_VERSION_MEMBER_COUNT_PER_WORKSPACE
+          ) {
+            return c.json({ error: "User limit exceeded" }, 400);
+          }
+        } catch {
+          // If member list isn't readable, continue and let createDocument decide.
         }
+      }
 
+      const { databases: adminDatabases } = await createAdminClient();
+
+      try {
+        await adminDatabases.createDocument(
+          DATABASE_ID,
+          MEMBERS_ID,
+          ID.unique(),
+          {
+            workspaceId,
+            userId: user.$id,
+            role: MemberRole.MEMBER,
+          },
+        );
+      } catch {
+        // Fall back to the user session if API key can't write members.
         await databases.createDocument(DATABASE_ID, MEMBERS_ID, ID.unique(), {
           workspaceId,
           userId: user.$id,

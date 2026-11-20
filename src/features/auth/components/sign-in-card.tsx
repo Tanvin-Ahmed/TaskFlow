@@ -23,8 +23,12 @@ import { useSignIn } from "../api/use-signin";
 import { Loader } from "lucide-react";
 import { signUpWithGithub, signUpWithGoogle } from "@/lib/oauth";
 
-const SignInCard = () => {
-  const { mutate, isPending } = useSignIn();
+interface SignInCardProps {
+  callbackUrl?: string;
+}
+
+const SignInCard = ({ callbackUrl = "/dashboard" }: SignInCardProps) => {
+  const { mutate, isPending } = useSignIn(callbackUrl);
   const form = useForm<z.infer<typeof signInSchema>>({
     resolver: zodResolver(signInSchema),
     defaultValues: {
@@ -36,6 +40,11 @@ const SignInCard = () => {
   const onSubmit = (values: z.infer<typeof signInSchema>) => {
     mutate({ json: values });
   };
+
+  const signUpHref =
+    callbackUrl && callbackUrl !== "/dashboard"
+      ? `/sign-up?callbackUrl=${encodeURIComponent(callbackUrl)}`
+      : "/sign-up";
 
   return (
     <Card className="w-full border-none shadow-md md:w-[487px]">
@@ -115,7 +124,7 @@ const SignInCard = () => {
         <CardContent className={"flex items-center justify-center p-7"}>
           <small>
             Don&apos;t have an account?{" "}
-            <Link href={"/sign-up"}>
+            <Link href={signUpHref}>
               <span className="text-blue-700">&nbsp;Sign Up</span>
             </Link>
           </small>

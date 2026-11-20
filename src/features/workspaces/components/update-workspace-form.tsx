@@ -166,16 +166,18 @@ const UpdateWorkspaceForm = ({ onCancel, initialValue }: Props) => {
               Use the invite link to add members to your workspace.
             </p>
             <div className="mt-4">
-              <div className="flex items-center">
-                <Input
-                  disabled
-                  value={fullInviteLink}
-                  className={"rounded-r-none border-r-0"}
-                />
+              <div className="flex items-start gap-2">
+                <div className="min-w-0 flex-1 rounded-md border bg-background px-3 py-2">
+                  <p className="break-all text-sm leading-relaxed">
+                    {fullInviteLink}
+                  </p>
+                </div>
                 <Button
                   onClick={handleCopyInviteLink}
                   variant={"secondary"}
-                  className={"rounded-l-none"}
+                  className="shrink-0"
+                  type="button"
+                  aria-label="Copy invite link"
                 >
                   <CopyIcon className={"size-4"} />
                 </Button>

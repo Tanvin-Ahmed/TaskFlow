@@ -38,3 +38,25 @@ export const getWorkspaceName = async (workspaceId: string) => {
 
   return { name: workspace.name };
 };
+
+export const getWorkspaceInviteInfo = async (
+  workspaceId: string,
+  inviteCode: string,
+) => {
+  try {
+    const { databases } = await createSessionClient();
+    const workspace = await databases.getDocument<Workspace>(
+      DATABASE_ID,
+      WORKSPACES_ID,
+      workspaceId,
+    );
+
+    if (workspace.inviteCode && workspace.inviteCode !== inviteCode) {
+      return null;
+    }
+
+    return { name: workspace.name, $id: workspace.$id };
+  } catch {
+    return null;
+  }
+};

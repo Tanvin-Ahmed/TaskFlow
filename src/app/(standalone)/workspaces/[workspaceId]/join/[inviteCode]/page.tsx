@@ -1,27 +1,34 @@
 import { getCurrent } from "@/features/auth/server/queries";
 import JoinWorkspaceForm from "@/features/workspaces/components/join-workspace-form";
-import { getWorkspaceName } from "@/features/workspaces/queries";
+import { getWorkspaceInviteInfo } from "@/features/workspaces/queries";
 import { redirect } from "next/navigation";
 
 interface Props {
   params: {
     workspaceId: string;
+    inviteCode: string;
   };
 }
 
 const WorkspaceIdJoinPage = async ({ params }: Props) => {
+  const { workspaceId, inviteCode } = params;
+  const invitePath = `/workspaces/${workspaceId}/join/${inviteCode}`;
+  const signInHref = `/sign-in?callbackUrl=${encodeURIComponent(invitePath)}`;
+
   const user = await getCurrent();
-  if (!user) redirect("/sign-in");
+  if (!user) {
+    redirect(signInHref);
+  }
 
-  const { workspaceId } = params;
+  const workspace = await getWorkspaceInviteInfo(workspaceId, inviteCode);
 
-  const workspaceName = await getWorkspaceName(workspaceId);
-
-  if (!workspaceName) redirect("/dashboard");
+  if (!workspace) {
+    redirect("/dashboard");
+  }
 
   return (
     <div className="w-full lg:max-w-xl">
-      <JoinWorkspaceForm initialValue={workspaceName} />
+      <JoinWorkspaceForm initialValue={workspace} />
     </div>
   );
 };
