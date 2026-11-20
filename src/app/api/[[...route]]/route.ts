@@ -10,6 +10,9 @@ import webhooks from "@/features/webhooks/server/route";
 import liveblocks from "@/features/live-block/server/route";
 import notifications from "@/features/notifications/server/route";
 
+// Ensure Appwrite SDK runs on Node (not Edge) on Vercel.
+export const runtime = "nodejs";
+
 const app = new Hono().basePath("/api");
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars

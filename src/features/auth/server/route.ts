@@ -41,6 +41,12 @@ const app = new Hono()
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Failed to sign in";
+      const cause =
+        error instanceof Error && error.cause instanceof Error
+          ? `${error.cause.name}: ${error.cause.message}`
+          : error instanceof Error && error.cause
+            ? String(error.cause)
+            : undefined;
       const status =
         typeof error === "object" &&
         error !== null &&
@@ -48,7 +54,12 @@ const app = new Hono()
         error.code === 401
           ? 401
           : 500;
-      return c.json({ error: message }, status);
+      return c.json(
+        {
+          error: cause ? `${message} (${cause})` : message,
+        },
+        status,
+      );
     }
   })
   .post("/sign-up", zValidator("json", signUpSchema), async (c) => {

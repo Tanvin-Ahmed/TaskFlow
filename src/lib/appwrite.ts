@@ -1,13 +1,17 @@
 "use server";
 
+import dns from "node:dns";
 import { AUTH_COOKIE } from "@/features/auth/constant";
 import { cookies } from "next/headers";
 import { Client, Account, Databases, Users } from "node-appwrite";
 
+// Vercel/Node 20+ undici often times out on Appwrite when IPv6 is preferred.
+dns.setDefaultResultOrder("ipv4first");
+
 const getAppwriteConfig = () => {
-  const endpoint = process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT;
-  const project = process.env.NEXT_PUBLIC_APPWRITE_PROJECT;
-  const key = process.env.NEXT_APPWRITE_KEY;
+  const endpoint = process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT?.trim();
+  const project = process.env.NEXT_PUBLIC_APPWRITE_PROJECT?.trim();
+  const key = process.env.NEXT_APPWRITE_KEY?.trim();
 
   if (!endpoint || !project) {
     throw new Error(
